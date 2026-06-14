@@ -9,7 +9,7 @@ APP_NAME="pmt-scanner"
 INPUT_DIR="$ROOT_DIR/input"
 OUTPUT_DIR="$ROOT_DIR/output"
 CONFIG_FILE="$ROOT_DIR/samples/paper-config.json"
-THREADS="4"
+THREADS="auto"
 BACKEND="cpu"
 WATCH="0"
 CLEAN="0"
@@ -71,7 +71,7 @@ Options:
   --input PATH            Input image directory (default: input)
   --output PATH           Output directory (default: output)
   --config PATH           Paper config JSON (default: samples/paper-config.json)
-  --threads N             Number of processing threads (default: 4)
+  --threads auto|N        Number of processing threads (default: auto)
   --backend NAME          Backend name (default: cpu)
   -h, --help              Show this help
 

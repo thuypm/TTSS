@@ -1,8 +1,13 @@
 #include "RoiDetector.hpp"
 
+#include <algorithm>
 #include <stdexcept>
 
 #include <opencv2/imgproc.hpp>
+
+#ifdef PMT_SCANNER_HAS_OPENMP
+#include <omp.h>
+#endif
 
 #include "RoiDetector/Common.hpp"
 #include "RoiDetector/PartOneTwo.hpp"
@@ -11,7 +16,8 @@
 
 namespace pmt {
 
-using std::runtime_error;
+using namespace std;
+
 
 ProcessedImageData detectRois(const cv::Mat& warped, const PaperConfig& config) {
     if (warped.empty()) {
@@ -45,11 +51,34 @@ ProcessedImageData detectRois(const cv::Mat& warped, const PaperConfig& config) 
     partThreeOptions.sheetFillHighRef = sheetFillHighRef;
 
     ProcessedImageData data;
+
+#ifdef PMT_SCANNER_HAS_OPENMP
+    const int roiThreads = min(5, max(1, omp_get_max_threads()));
+#pragma omp parallel sections num_threads(roiThreads) if(!omp_in_parallel() && roiThreads > 1)
+    {
+#pragma omp section
+        data.studentId = detectStudentId(rawGray, config.studentId);
+
+#pragma omp section
+        data.key = detectKey(rawGray, config.key);
+
+#pragma omp section
+        data.partOne = detectPartOne(grayForParts, config.partOne, partOneOptions);
+
+#pragma omp section
+        data.partTwo = detectPartTwo(grayForParts, config.partTwo, partTwoOptions);
+
+#pragma omp section
+        data.partThree = detectPartThree(grayForParts, config.partThree, partThreeOptions);
+    }
+#else
     data.studentId = detectStudentId(rawGray, config.studentId);
     data.key = detectKey(rawGray, config.key);
     data.partOne = detectPartOne(grayForParts, config.partOne, partOneOptions);
     data.partTwo = detectPartTwo(grayForParts, config.partTwo, partTwoOptions);
     data.partThree = detectPartThree(grayForParts, config.partThree, partThreeOptions);
+#endif
+
     return data;
 }
 

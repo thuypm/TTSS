@@ -1,5 +1,6 @@
 #include "ImageProcessor.hpp"
 
+#include <algorithm>
 #include <chrono>
 #include <exception>
 #include <filesystem>
@@ -20,12 +21,10 @@
 
 namespace pmt {
 
-using std::exception;
+using namespace std;
+
 using std::filesystem::path;
 using std::filesystem::relative;
-using std::runtime_error;
-using std::string;
-using std::vector;
 using std::chrono::duration;
 using std::chrono::steady_clock;
 
@@ -65,7 +64,7 @@ ImageProcessResult processOneImage(
     }
 
     const auto end = steady_clock::now();
-    result.elapsedMs = duration<double, std::milli>(end - start).count();
+    result.elapsedMs = duration<double, milli>(end - start).count();
     return result;
 }
 
@@ -76,10 +75,13 @@ vector<ImageProcessResult> processImageBatch(
     int threads
 ) {
     vector<ImageProcessResult> results(files.size());
+    if (files.empty()) {
+        return results;
+    }
 
 #ifdef PMT_SCANNER_HAS_OPENMP
-    omp_set_num_threads(threads);
-#pragma omp parallel for schedule(dynamic)
+    const int batchThreads = min(max(1, threads), static_cast<int>(files.size()));
+#pragma omp parallel for schedule(dynamic) num_threads(batchThreads) if(batchThreads > 1)
 #else
     (void)threads;
 #endif

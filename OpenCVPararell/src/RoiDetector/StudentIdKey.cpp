@@ -8,22 +8,20 @@
 
 namespace pmt {
 
-using std::max;
-using std::string;
-using std::vector;
+using namespace std;
 
 namespace {
 
 vector<vector<string>> detectDigitsByDarkest(
     const cv::Mat& gray,
-    const vector<std::map<string, BubbleBox>>& groups,
+    const vector<map<string, BubbleBox>>& groups,
     double minGap = 4.0
 ) {
     vector<vector<string>> result;
     result.reserve(groups.size());
 
     for (const auto& group : groups) {
-        vector<std::pair<string, double>> candidates;
+        vector<pair<string, double>> candidates;
         for (const auto& [label, box] : group) {
             const int width = box.bottomRight.x - box.topLeft.x;
             const int height = box.bottomRight.y - box.topLeft.y;
@@ -31,8 +29,8 @@ vector<vector<string>> detectDigitsByDarkest(
                 continue;
             }
 
-            const int padX = max(1, static_cast<int>(std::round(width * 0.2)));
-            const int padY = max(1, static_cast<int>(std::round(height * 0.2)));
+            const int padX = max(1, static_cast<int>(round(width * 0.2)));
+            const int padY = max(1, static_cast<int>(round(height * 0.2)));
             const cv::Rect bounds(0, 0, gray.cols, gray.rows);
             const cv::Rect roiRect(
                 box.topLeft.x + padX,
@@ -54,7 +52,7 @@ vector<vector<string>> detectDigitsByDarkest(
             continue;
         }
 
-        std::sort(candidates.begin(), candidates.end(), [](const auto& a, const auto& b) {
+        sort(candidates.begin(), candidates.end(), [](const auto& a, const auto& b) {
             return a.second > b.second;
         });
         if (candidates.size() >= 2 && candidates[0].second - candidates[1].second < minGap) {
@@ -72,14 +70,14 @@ vector<vector<string>> detectDigitsByDarkest(
 
 vector<vector<string>> detectStudentId(
     const cv::Mat& gray,
-    const vector<std::map<string, BubbleBox>>& groups
+    const vector<map<string, BubbleBox>>& groups
 ) {
     return detectDigitsByDarkest(gray, groups);
 }
 
 vector<vector<string>> detectKey(
     const cv::Mat& gray,
-    const vector<std::map<string, BubbleBox>>& groups
+    const vector<map<string, BubbleBox>>& groups
 ) {
     return detectDigitsByDarkest(gray, groups);
 }

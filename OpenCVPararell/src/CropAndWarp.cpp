@@ -10,47 +10,46 @@
 
 namespace pmt {
 
-using std::runtime_error;
-using std::vector;
+using namespace std;
 
 namespace {
 
 double distanceBetween(const cv::Point2f& a, const cv::Point2f& b) {
-    return std::hypot(a.x - b.x, a.y - b.y);
+    return hypot(a.x - b.x, a.y - b.y);
 }
 
-std::array<cv::Point2f, 4> reorderQuad(vector<cv::Point2f> points) {
-    std::sort(points.begin(), points.end(), [](const cv::Point2f& a, const cv::Point2f& b) {
+array<cv::Point2f, 4> reorderQuad(vector<cv::Point2f> points) {
+    sort(points.begin(), points.end(), [](const cv::Point2f& a, const cv::Point2f& b) {
         return a.y < b.y;
     });
 
     vector<cv::Point2f> top{points[0], points[1]};
     vector<cv::Point2f> bottom{points[2], points[3]};
-    std::sort(top.begin(), top.end(), [](const cv::Point2f& a, const cv::Point2f& b) {
+    sort(top.begin(), top.end(), [](const cv::Point2f& a, const cv::Point2f& b) {
         return a.x < b.x;
     });
-    std::sort(bottom.begin(), bottom.end(), [](const cv::Point2f& a, const cv::Point2f& b) {
+    sort(bottom.begin(), bottom.end(), [](const cv::Point2f& a, const cv::Point2f& b) {
         return a.x < b.x;
     });
 
     return {top[0], top[1], bottom[1], bottom[0]};
 }
 
-bool isReasonableQuad(const std::array<cv::Point2f, 4>& quad, int width, int height) {
+bool isReasonableQuad(const array<cv::Point2f, 4>& quad, int width, int height) {
     const auto& [tl, tr, br, bl] = quad;
     const double topWidth = distanceBetween(tl, tr);
     const double bottomWidth = distanceBetween(bl, br);
     const double leftHeight = distanceBetween(tl, bl);
     const double rightHeight = distanceBetween(tr, br);
 
-    const double minWidth = std::min(topWidth, bottomWidth);
-    const double minHeight = std::min(leftHeight, rightHeight);
+    const double minWidth = min(topWidth, bottomWidth);
+    const double minHeight = min(leftHeight, rightHeight);
     if (minWidth < width * 0.35 || minHeight < height * 0.35) {
         return false;
     }
 
-    const double widthRatio = std::max(topWidth, bottomWidth) / std::max(1.0, minWidth);
-    const double heightRatio = std::max(leftHeight, rightHeight) / std::max(1.0, minHeight);
+    const double widthRatio = max(topWidth, bottomWidth) / max(1.0, minWidth);
+    const double heightRatio = max(leftHeight, rightHeight) / max(1.0, minHeight);
     return widthRatio < 1.8 && heightRatio < 1.8;
 }
 
@@ -74,14 +73,14 @@ cv::Mat preprocessForPageDetection(const cv::Mat& source) {
     return closed;
 }
 
-std::array<cv::Point2f, 4> findPageQuad(const cv::Mat& source) {
+array<cv::Point2f, 4> findPageQuad(const cv::Mat& source) {
     cv::Mat binary = preprocessForPageDetection(source);
 
     vector<vector<cv::Point>> contours;
     cv::findContours(binary, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
     double bestArea = 0.0;
-    std::array<cv::Point2f, 4> bestQuad{};
+    array<cv::Point2f, 4> bestQuad{};
     bool found = false;
 
     for (const auto& contour : contours) {
@@ -99,7 +98,7 @@ std::array<cv::Point2f, 4> findPageQuad(const cv::Mat& source) {
         }
 
         const auto quad = reorderQuad(points);
-        const double area = std::abs(cv::contourArea(approx));
+        const double area = abs(cv::contourArea(approx));
         if (area > bestArea && isReasonableQuad(quad, binary.cols, binary.rows)) {
             bestArea = area;
             bestQuad = quad;
@@ -116,10 +115,10 @@ std::array<cv::Point2f, 4> findPageQuad(const cv::Mat& source) {
 
 cv::Mat warpFromCorners(
     const cv::Mat& source,
-    const std::array<cv::Point2f, 4>& corners,
+    const array<cv::Point2f, 4>& corners,
     const cv::Size& outputSize
 ) {
-    const std::array<cv::Point2f, 4> destination{
+    const array<cv::Point2f, 4> destination{
         cv::Point2f(0.0f, 0.0f),
         cv::Point2f(static_cast<float>(outputSize.width - 1), 0.0f),
         cv::Point2f(static_cast<float>(outputSize.width - 1), static_cast<float>(outputSize.height - 1)),

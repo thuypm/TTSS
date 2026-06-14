@@ -13,17 +13,10 @@
 
 namespace pmt {
 
+using namespace std;
+
 using std::filesystem::exists;
-using std::ifstream;
-using std::map;
 using std::filesystem::path;
-using std::runtime_error;
-using std::size_t;
-using std::stringstream;
-using std::string;
-using std::tolower;
-using std::transform;
-using std::vector;
 
 namespace {
 
@@ -45,7 +38,7 @@ struct JsonValue {
 
 class JsonParser {
 public:
-    explicit JsonParser(string source) : source_(std::move(source)) {}
+    explicit JsonParser(string source) : source_(move(source)) {}
 
     JsonValue parse() {
         JsonValue value = parseValue();
@@ -61,7 +54,7 @@ private:
     size_t position_ = 0;
 
     void skipWhitespace() {
-        while (position_ < source_.size() && std::isspace(static_cast<unsigned char>(source_[position_]))) {
+        while (position_ < source_.size() && isspace(static_cast<unsigned char>(source_[position_]))) {
             ++position_;
         }
     }
@@ -104,7 +97,7 @@ private:
             value.text = parseString();
             return value;
         }
-        if (ch == '-' || std::isdigit(static_cast<unsigned char>(ch))) {
+        if (ch == '-' || isdigit(static_cast<unsigned char>(ch))) {
             return parseNumber();
         }
         if (source_.compare(position_, 4, "null") == 0) {
@@ -217,19 +210,19 @@ private:
         if (source_[position_] == '-') {
             ++position_;
         }
-        while (position_ < source_.size() && std::isdigit(static_cast<unsigned char>(source_[position_]))) {
+        while (position_ < source_.size() && isdigit(static_cast<unsigned char>(source_[position_]))) {
             ++position_;
         }
         if (position_ < source_.size() && source_[position_] == '.') {
             ++position_;
-            while (position_ < source_.size() && std::isdigit(static_cast<unsigned char>(source_[position_]))) {
+            while (position_ < source_.size() && isdigit(static_cast<unsigned char>(source_[position_]))) {
                 ++position_;
             }
         }
 
         JsonValue value;
         value.type = JsonValue::Type::Number;
-        value.number = std::stod(source_.substr(start, position_ - start));
+        value.number = stod(source_.substr(start, position_ - start));
         return value;
     }
 };
@@ -303,7 +296,7 @@ vector<map<string, BubbleBox>> readBubbleGroupList(const JsonValue& value, const
     vector<map<string, BubbleBox>> groups;
     groups.reserve(value.array.size());
     for (size_t i = 0; i < value.array.size(); ++i) {
-        groups.push_back(readBubbleGroup(value.array[i], fieldName + "[" + std::to_string(i) + "]"));
+        groups.push_back(readBubbleGroup(value.array[i], fieldName + "[" + to_string(i) + "]"));
     }
     return groups;
 }
@@ -316,7 +309,7 @@ vector<vector<map<string, BubbleBox>>> readNestedBubbleGroupList(const JsonValue
     vector<vector<map<string, BubbleBox>>> groups;
     groups.reserve(value.array.size());
     for (size_t i = 0; i < value.array.size(); ++i) {
-        groups.push_back(readBubbleGroupList(value.array[i], fieldName + "[" + std::to_string(i) + "]"));
+        groups.push_back(readBubbleGroupList(value.array[i], fieldName + "[" + to_string(i) + "]"));
     }
     return groups;
 }

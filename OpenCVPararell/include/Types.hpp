@@ -18,7 +18,7 @@ struct CliOptions {
     std::filesystem::path inputDir = "input";
     std::filesystem::path outputDir = "output";
     std::filesystem::path configPath = "samples/paper-config.json";
-    int threads = 1;
+    int threads = 0;
     Backend backend = Backend::Cpu;
 };
 

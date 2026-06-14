@@ -8,15 +8,13 @@
 
 namespace pmt {
 
-using std::max;
-using std::string;
-using std::vector;
+using namespace std;
 
 namespace {
 
 vector<vector<string>> detectPart(
     const cv::Mat& gray,
-    const vector<std::map<string, BubbleBox>>& groups,
+    const vector<map<string, BubbleBox>>& groups,
     PickOptions options
 ) {
     vector<vector<ScoreEntry>> scoresMap;
@@ -28,7 +26,7 @@ vector<vector<string>> detectPart(
         for (const auto& score : scores) {
             allRatios.push_back(score.ratio);
         }
-        scoresMap.push_back(std::move(scores));
+        scoresMap.push_back(move(scores));
     }
 
     const AdaptiveThreshold adaptive = computeAdaptiveFillThresholdFromRatios(allRatios);
@@ -50,7 +48,7 @@ vector<vector<string>> detectPart(
 
 vector<vector<string>> detectPartOne(
     const cv::Mat& gray,
-    const vector<std::map<string, BubbleBox>>& groups,
+    const vector<map<string, BubbleBox>>& groups,
     PickOptions options
 ) {
     return detectPart(gray, groups, options);
@@ -58,7 +56,7 @@ vector<vector<string>> detectPartOne(
 
 vector<vector<string>> detectPartTwo(
     const cv::Mat& gray,
-    const vector<std::map<string, BubbleBox>>& groups,
+    const vector<map<string, BubbleBox>>& groups,
     PickOptions options
 ) {
     return detectPart(gray, groups, options);

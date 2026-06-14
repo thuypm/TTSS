@@ -9,13 +9,8 @@
 
 namespace pmt {
 
-using std::accumulate;
-using std::max;
-using std::min;
-using std::runtime_error;
-using std::size_t;
-using std::string;
-using std::vector;
+using namespace std;
+
 
 double centerDarknessScore(const cv::Mat& gray, const BubbleBox& box) {
     if (gray.empty()) {
@@ -28,8 +23,8 @@ double centerDarknessScore(const cv::Mat& gray, const BubbleBox& box) {
         return 0.0;
     }
 
-    const int padX = max(1, static_cast<int>(std::round(width * 0.2)));
-    const int padY = max(1, static_cast<int>(std::round(height * 0.2)));
+    const int padX = max(1, static_cast<int>(round(width * 0.2)));
+    const int padY = max(1, static_cast<int>(round(height * 0.2)));
     const cv::Rect imageBounds(0, 0, gray.cols, gray.rows);
     const cv::Rect roiRect(
         box.topLeft.x + padX,
@@ -45,7 +40,7 @@ double centerDarknessScore(const cv::Mat& gray, const BubbleBox& box) {
     const cv::Mat roi = gray(clipped);
     cv::Mat mask = cv::Mat::zeros(roi.size(), CV_8UC1);
     const cv::Point center(roi.cols / 2, roi.rows / 2);
-    const int radius = max(2, static_cast<int>(std::round(min(roi.cols, roi.rows) * 0.35)));
+    const int radius = max(2, static_cast<int>(round(min(roi.cols, roi.rows) * 0.35)));
     cv::circle(mask, center, radius, cv::Scalar(255), cv::FILLED);
 
     const double meanValue = cv::mean(roi, mask)[0];
@@ -58,7 +53,7 @@ AdaptiveThreshold computeAdaptiveFillThresholdFromRatios(const vector<double>& r
     }
 
     vector<double> sorted = ratios;
-    std::sort(sorted.begin(), sorted.end());
+    sort(sorted.begin(), sorted.end());
     const int n = static_cast<int>(sorted.size());
     const int minHighTailCount = 4;
     const double minUpperFraction = 0.02;
@@ -69,13 +64,13 @@ AdaptiveThreshold computeAdaptiveFillThresholdFromRatios(const vector<double>& r
     if (n >= 6) {
         double bestGap = -1.0;
         int bestIndex = -1;
-        const int minUpperCount = max(minHighTailCount, static_cast<int>(std::ceil(n * minUpperFraction)));
-        const int maxUpperCount = max(minUpperCount + 1, static_cast<int>(std::floor(n * maxUpperFraction)));
+        const int minUpperCount = max(minHighTailCount, static_cast<int>(ceil(n * minUpperFraction)));
+        const int maxUpperCount = max(minUpperCount + 1, static_cast<int>(floor(n * maxUpperFraction)));
 
         for (int i = 0; i < n - 1; ++i) {
             const double gap = sorted[i + 1] - sorted[i];
             const int upperCount = n - (i + 1);
-            if (!std::isfinite(gap) || gap <= 0.0) {
+            if (!isfinite(gap) || gap <= 0.0) {
                 continue;
             }
             if (upperCount < minUpperCount || upperCount > maxUpperCount) {
@@ -105,11 +100,11 @@ AdaptiveThreshold computeAdaptiveFillThresholdFromRatios(const vector<double>& r
     const int lowHalfEnd = max(1, n / 2);
     const double lowSum = accumulate(sorted.begin(), sorted.begin() + lowHalfEnd, 0.0);
     const double lowRef = lowSum / lowHalfEnd;
-    const int highCount = min(n, max(minHighTailCount, static_cast<int>(std::floor(n * 0.2))));
+    const int highCount = min(n, max(minHighTailCount, static_cast<int>(floor(n * 0.2))));
     const double highSum = accumulate(sorted.end() - highCount, sorted.end(), 0.0);
     const double highRef = highSum / highCount;
     const double spread = highRef - lowRef;
-    if (!std::isfinite(spread) || spread < minSpread) {
+    if (!isfinite(spread) || spread < minSpread) {
         return threshold;
     }
 
@@ -126,7 +121,7 @@ double medianSortedAsc(vector<double> values) {
     if (values.empty()) {
         return 0.0;
     }
-    std::sort(values.begin(), values.end());
+    sort(values.begin(), values.end());
     const size_t middle = values.size() / 2;
     if (values.size() % 2 == 1) {
         return values[middle];
@@ -139,7 +134,7 @@ vector<string> pickWinningLabelsFromGrayScores(vector<ScoreEntry> scores, const 
         return {};
     }
 
-    std::sort(scores.begin(), scores.end(), [](const ScoreEntry& a, const ScoreEntry& b) {
+    sort(scores.begin(), scores.end(), [](const ScoreEntry& a, const ScoreEntry& b) {
         return a.ratio > b.ratio;
     });
 
@@ -149,21 +144,21 @@ vector<string> pickWinningLabelsFromGrayScores(vector<ScoreEntry> scores, const 
     }
 
     vector<double> highRefs;
-    if (options.partFillHighRef >= 0.0 && std::isfinite(options.partFillHighRef)) {
+    if (options.partFillHighRef >= 0.0 && isfinite(options.partFillHighRef)) {
         highRefs.push_back(options.partFillHighRef);
     }
-    if (options.sheetFillHighRef >= 0.0 && std::isfinite(options.sheetFillHighRef)) {
+    if (options.sheetFillHighRef >= 0.0 && isfinite(options.sheetFillHighRef)) {
         highRefs.push_back(options.sheetFillHighRef);
     }
     if (!highRefs.empty()) {
-        const double typicalHigh = *std::max_element(highRefs.begin(), highRefs.end());
+        const double typicalHigh = *max_element(highRefs.begin(), highRefs.end());
         if (best.ratio < typicalHigh - options.maxBelowTypicalFillHighRef) {
             return {};
         }
     }
 
     if (options.allowMultiFilledCluster) {
-        const int maxMulti = static_cast<int>(std::floor(scores.size() * options.multiFilledMaxFraction));
+        const int maxMulti = static_cast<int>(floor(scores.size() * options.multiFilledMaxFraction));
         if (maxMulti >= 2) {
             const double clusterBand = options.tolerance + max(0.0, options.multiFilledClusterRelax);
             vector<string> cluster;
@@ -226,7 +221,7 @@ cv::Mat prepareGrayForRecognition(const cv::Mat& image) {
 
 vector<ScoreEntry> scoreBubbleGroup(
     const cv::Mat& gray,
-    const std::map<string, BubbleBox>& bubbleGroup
+    const map<string, BubbleBox>& bubbleGroup
 ) {
     vector<ScoreEntry> scores;
     scores.reserve(bubbleGroup.size());
@@ -240,7 +235,7 @@ vector<ScoreEntry> scoreBubbleGroup(
 
 vector<double> collectRatiosAllPartsForAdaptive(const cv::Mat& gray, const PaperConfig& config) {
     vector<double> ratios;
-    const auto pushGroup = [&](const std::map<string, BubbleBox>& group) {
+    const auto pushGroup = [&](const map<string, BubbleBox>& group) {
         for (const auto& [_, box] : group) {
             ratios.push_back(centerDarknessScore(gray, box));
         }

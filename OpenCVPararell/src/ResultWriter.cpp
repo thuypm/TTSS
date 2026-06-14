@@ -11,15 +11,8 @@
 
 namespace pmt {
 
-using std::count_if;
-using std::fixed;
-using std::ofstream;
-using std::ostringstream;
-using std::runtime_error;
-using std::setprecision;
-using std::size_t;
-using std::string;
-using std::vector;
+using namespace std;
+
 using std::filesystem::create_directories;
 using std::filesystem::path;
 

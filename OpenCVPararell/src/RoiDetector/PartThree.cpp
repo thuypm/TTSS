@@ -8,13 +8,12 @@
 
 namespace pmt {
 
-using std::max;
-using std::string;
-using std::vector;
+using namespace std;
+
 
 vector<vector<vector<string>>> detectPartThree(
     const cv::Mat& gray,
-    const vector<vector<std::map<string, BubbleBox>>>& groups,
+    const vector<vector<map<string, BubbleBox>>>& groups,
     PickOptions options
 ) {
     vector<vector<vector<ScoreEntry>>> scoresMap;
@@ -29,9 +28,9 @@ vector<vector<vector<string>>> detectPartThree(
             for (const auto& score : scores) {
                 allRatios.push_back(score.ratio);
             }
-            columnScores.push_back(std::move(scores));
+            columnScores.push_back(move(scores));
         }
-        scoresMap.push_back(std::move(columnScores));
+        scoresMap.push_back(move(columnScores));
     }
 
     const AdaptiveThreshold adaptive = computeAdaptiveFillThresholdFromRatios(allRatios);
@@ -49,7 +48,7 @@ vector<vector<vector<string>>> detectPartThree(
         for (const auto& scores : column) {
             columnResult.push_back(pickWinningLabelsFromGrayScores(scores, options));
         }
-        result.push_back(std::move(columnResult));
+        result.push_back(move(columnResult));
     }
 
     return result;

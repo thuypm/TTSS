@@ -9,16 +9,12 @@
 
 namespace pmt {
 
+using namespace std;
+
 using std::filesystem::directory_iterator;
 using std::filesystem::exists;
 using std::filesystem::is_directory;
 using std::filesystem::path;
-using std::runtime_error;
-using std::sort;
-using std::string;
-using std::tolower;
-using std::transform;
-using std::vector;
 
 namespace {
 

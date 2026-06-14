@@ -10,10 +10,10 @@
 
 namespace pmt {
 
+using namespace std;
+
 using std::filesystem::path;
 using std::filesystem::relative;
-using std::runtime_error;
-using std::string;
 
 path saveAnnotatedImage(
     const cv::Mat& warped,

@@ -9,9 +9,7 @@
 
 namespace pmt {
 
-using std::map;
-using std::string;
-using std::vector;
+using namespace std;
 
 namespace {
 
@@ -22,7 +20,7 @@ const int kSelectionBoxPadding = 4;
 
 int circleRadiusFromRoi(const BubbleBox& box) {
     const int height = box.bottomRight.y - box.topLeft.y;
-    return std::max(1, (height + kSelectionBoxPadding) / 2);
+    return max(1, (height + kSelectionBoxPadding) / 2);
 }
 
 cv::Point circleCenterFromRoi(const BubbleBox& box) {
@@ -63,7 +61,7 @@ void drawSelectedGroups(
     const vector<vector<string>>& selected,
     const cv::Scalar& color
 ) {
-    const size_t count = std::min(boxes.size(), selected.size());
+    const size_t count = min(boxes.size(), selected.size());
     for (size_t i = 0; i < count; ++i) {
         drawSelectedGroup(canvas, boxes[i], selected[i], color);
     }
@@ -75,9 +73,9 @@ void drawSelectedNestedGroups(
     const vector<vector<vector<string>>>& selected,
     const cv::Scalar& color
 ) {
-    const size_t outerCount = std::min(boxes.size(), selected.size());
+    const size_t outerCount = min(boxes.size(), selected.size());
     for (size_t i = 0; i < outerCount; ++i) {
-        const size_t innerCount = std::min(boxes[i].size(), selected[i].size());
+        const size_t innerCount = min(boxes[i].size(), selected[i].size());
         for (size_t j = 0; j < innerCount; ++j) {
             drawSelectedGroup(canvas, boxes[i][j], selected[i][j], color);
         }
