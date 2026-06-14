@@ -1,0 +1,60 @@
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editor and IDE files
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# C/C++ build outputs
+**/build/
+**/cmake-build-*/
+**/CMakeFiles/
+**/CMakeCache.txt
+**/cmake_install.cmake
+**/compile_commands.json
+**/Makefile
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.dll
+*.dylib
+*.exe
+*.out
+*.app
+*.pdb
+*.ilk
+*.exp
+
+# Generated data and runtime output
+**/output/**
+!**/output/
+!**/output/**/
+!**/output/**/.gitkeep
+**/output.json
+**/results.json
+**/results.csv
+**/errors.json
+
+# Local input datasets can be large; keep folder placeholders only.
+**/input/**
+!**/input/
+!**/input/**/
+!**/input/**/.gitkeep
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo

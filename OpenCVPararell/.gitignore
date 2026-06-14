@@ -1,0 +1,8 @@
+build/
+output/results.json
+output/results.csv
+output/logs/errors.json
+output/warped/*
+output/annotated/*
+!output/warped/.gitkeep
+!output/annotated/.gitkeep
