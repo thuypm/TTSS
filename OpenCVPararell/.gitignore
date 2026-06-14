@@ -1,4 +1,6 @@
 build/
+dist/
+pmt-scanner-win64.zip
 output/results.json
 output/results.csv
 output/logs/errors.json

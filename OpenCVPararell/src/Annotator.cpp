@@ -6,6 +6,8 @@
 
 #include <opencv2/imgcodecs.hpp>
 
+#include "AnnotatedResultImage.hpp"
+
 namespace pmt {
 
 using std::filesystem::path;
@@ -20,11 +22,10 @@ path saveAnnotatedImage(
     const OutputPaths& output,
     const string& fileName
 ) {
-    (void)data;
-    (void)config;
-
     const auto annotatedPath = output.annotatedDir / fileName;
-    if (!cv::imwrite(annotatedPath.string(), warped)) {
+    const cv::Mat annotated = drawDetectedBubblesOnImage(warped, data, config);
+
+    if (!cv::imwrite(annotatedPath.string(), annotated)) {
         throw runtime_error("Cannot write annotated image: " + annotatedPath.string());
     }
     return relative(annotatedPath, output.root);

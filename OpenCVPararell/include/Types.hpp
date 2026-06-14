@@ -37,6 +37,8 @@ struct BubbleBox {
 struct PaperConfig {
     int width = 0;
     int height = 0;
+    cv::Point score;
+    cv::Point note;
     std::vector<std::map<std::string, BubbleBox>> studentId;
     std::vector<std::map<std::string, BubbleBox>> key;
     std::vector<std::map<std::string, BubbleBox>> partOne;

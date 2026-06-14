@@ -11,6 +11,7 @@ find_package(OpenMP)
 
 add_executable(pmt-scanner
     src/main.cpp
+    src/AnnotatedResultImage.cpp
     src/Annotator.cpp
     src/Config.cpp
     src/CropAndWarp.cpp
@@ -18,10 +19,15 @@ add_executable(pmt-scanner
     src/ImageProcessor.cpp
     src/ResultWriter.cpp
     src/RoiDetector.cpp
+    src/RoiDetector/Common.cpp
+    src/RoiDetector/PartOneTwo.cpp
+    src/RoiDetector/PartThree.cpp
+    src/RoiDetector/StudentIdKey.cpp
 )
 
 target_include_directories(pmt-scanner PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${OpenCV_INCLUDE_DIRS}
 )
 

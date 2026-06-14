@@ -75,10 +75,6 @@ int main(int argc, char** argv) {
         const auto end = steady_clock::now();
         const double elapsedMs = duration<double, std::milli>(end - start).count();
 
-        pmt::writeResultsJson(options.outputDir, options.inputDir, results, elapsedMs);
-        pmt::writeResultsCsv(options.outputDir, results);
-        pmt::writeErrorLog(options.outputDir, results);
-
         cout << "Processed " << results.size() << " image(s) in " << elapsedMs << " ms.\n";
         cout << "Output: " << options.outputDir.string() << "\n";
         return 0;

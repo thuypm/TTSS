@@ -51,6 +51,9 @@ Desktop.ini
 !**/input/**/
 !**/input/**/.gitkeep
 
+# Demo images for OpenCVPararell.
+!OpenCVPararell/input/*.jpg
+
 # Logs and temporary files
 *.log
 *.tmp
