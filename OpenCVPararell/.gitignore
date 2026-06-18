@@ -6,5 +6,9 @@ output/results.csv
 output/logs/errors.json
 output/warped/*
 output/annotated/*
+output-parallel/**
+output-sequential/**
+output/timing/*
 !output/warped/.gitkeep
 !output/annotated/.gitkeep
+!output/timing/.gitkeep

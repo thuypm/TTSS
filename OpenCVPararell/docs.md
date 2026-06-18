@@ -111,6 +111,58 @@ Sau khi chạy, chương trình in số luồng thực tế:
 Threads: 12
 ```
 
+## So Sánh Tuần Tự vs Song Song
+
+Project có 2 chương trình riêng và 2 script chạy riêng:
+
+| Chương trình | Script | Output ảnh | File thời gian |
+|---|---|---|---|
+| `pmt-scanner` (OpenMP) | `run_parallel.sh` | `output-parallel/` | `output/timing/parallel.txt` |
+| `pmt-scanner-sequential` | `run_sequential.sh` | `output-sequential/` | `output/timing/sequential.txt` |
+
+Chạy song song:
+
+```bash
+bash run_parallel.sh
+bash run_sequential.sh
+```
+
+Ví dụ nội dung `output/timing/parallel.txt`:
+
+```text
+program=pmt-scanner
+mode=parallel
+images=12
+elapsed_ms=386.23
+threads=12
+wall_clock_ms=402
+output_dir=output-parallel
+finished_at=2026-06-18T21:30:00+07:00
+```
+
+Ví dụ nội dung `output/timing/sequential.txt`:
+
+```text
+program=pmt-scanner-sequential
+mode=sequential
+images=12
+elapsed_ms=4520.35
+threads=1
+wall_clock_ms=4535
+output_dir=output-sequential
+finished_at=2026-06-18T21:31:00+07:00
+```
+
+Tùy chọn script:
+
+```text
+--build-only        Chỉ build
+--input PATH        Thư mục ảnh
+--output PATH       Thư mục output riêng
+--timing-file PATH  Đổi file ghi thời gian
+--threads auto|N    Chỉ dùng cho run_parallel.sh
+```
+
 ## Song Song Hóa Bằng OpenMP
 
 Project có hai tầng song song:
