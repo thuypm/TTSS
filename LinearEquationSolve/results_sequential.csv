@@ -1,0 +1,11 @@
+n,method,time_ms,iterations
+100,Jacobi,1.5615,9
+100,Gauss,5.4858,1
+200,Jacobi,3.0410,9
+200,Gauss,35.1686,1
+500,Jacobi,15.4677,8
+500,Gauss,518.6222,1
+1000,Jacobi,75.4714,8
+1000,Gauss,4255.6172,1
+2000,Jacobi,199.1738,6
+2000,Gauss,36479.4466,1

@@ -1,0 +1,51 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build Sequential",
+            "type": "shell",
+            "command": "g++",
+            "args": ["-O3", "-std=c++17", "-o", "sequential", "sequential.cpp"],
+            "group": "build",
+            "presentation": { "reveal": "always" },
+            "problemMatcher": ["$gcc"]
+        },
+        {
+            "label": "Build Parallel (OpenMP)",
+            "type": "shell",
+            "command": "g++",
+            "args": ["-O3", "-std=c++17", "-fopenmp", "-o", "parallel", "parallel.cpp"],
+            "group": "build",
+            "presentation": { "reveal": "always" },
+            "problemMatcher": ["$gcc"]
+        },
+        {
+            "label": "Build All",
+            "dependsOn": ["Build Sequential", "Build Parallel (OpenMP)"],
+            "group": { "kind": "build", "isDefault": true }
+        },
+        {
+            "label": "Run Sequential",
+            "type": "shell",
+            "command": "./sequential",
+            "dependsOn": "Build Sequential",
+            "group": "test",
+            "presentation": { "reveal": "always", "panel": "new" }
+        },
+        {
+            "label": "Run Parallel (OpenMP)",
+            "type": "shell",
+            "command": "./parallel",
+            "dependsOn": "Build Parallel (OpenMP)",
+            "group": "test",
+            "presentation": { "reveal": "always", "panel": "new" }
+        },
+        {
+            "label": "Run Full Benchmark",
+            "type": "shell",
+            "command": "bash run_benchmark.sh",
+            "group": "test",
+            "presentation": { "reveal": "always", "panel": "shared" }
+        }
+    ]
+}

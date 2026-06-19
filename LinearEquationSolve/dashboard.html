@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Linear Solver Benchmark Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+         background: #f5f5f0; color: #1a1a1a; padding: 2rem; }
+  h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+  .sub { color: #666; font-size: 14px; margin-bottom: 1.5rem; }
+  .metrics { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 1.5rem; }
+  .mc { background: #fff; border-radius: 10px; padding: 1rem 1.2rem; border: 1px solid #e5e5e0; }
+  .mc .lbl { font-size: 12px; color: #888; margin-bottom: 4px; }
+  .mc .val { font-size: 24px; font-weight: 600; }
+  .mc .hint { font-size: 11px; color: #aaa; margin-top: 2px; }
+  .panel { background: #fff; border-radius: 12px; border: 1px solid #e5e5e0; padding: 1.5rem; margin-bottom: 1.5rem; }
+  .panel h2 { font-size: 16px; font-weight: 600; margin-bottom: 1rem; color: #333; }
+  .tabs { display: flex; gap: 6px; margin-bottom: 1rem; flex-wrap: wrap; }
+  .tab { padding: 6px 16px; font-size: 13px; border: 1px solid #ccc; border-radius: 8px;
+         cursor: pointer; background: transparent; color: #555; }
+  .tab.active { background: #f0f0eb; color: #111; border-color: #999; }
+  .controls { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; }
+  .controls label { font-size: 13px; color: #666; }
+  select { font-size: 13px; padding: 5px 10px; border: 1px solid #ccc; border-radius: 6px; background: #fff; }
+  .chart-wrap { position: relative; width: 100%; height: 300px; }
+  .note { font-size: 12.5px; color: #666; line-height: 1.6; margin-top: 1rem;
+          background: #f8f8f5; border-left: 3px solid #888; padding: 0.75rem; border-radius: 4px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 10px; font-size: 12px; color: #666; }
+  .legend span { display: flex; align-items: center; gap: 5px; }
+  .legend b { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { background: #f0f0eb; padding: 8px 12px; text-align: left; font-weight: 600; color: #555; }
+  td { padding: 7px 12px; border-bottom: 1px solid #f0f0eb; }
+  tr:hover td { background: #fafaf8; }
+  .badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 4px;
+           font-weight: 500; }
+  .good { background: #e6f3e6; color: #2a6e2a; }
+  .bad  { background: #fdecea; color: #c0392b; }
+  @media(max-width:700px){ .metrics{grid-template-columns:repeat(2,1fr)} }
+</style>
+</head>
+<body>
+
+<h1>Linear Solver — Benchmark Dashboard</h1>
+<p class="sub">So sánh Tuần tự vs Song song OpenMP | Jacobi &amp; Khử Gauss</p>
+
+<div class="metrics">
+  <div class="mc"><div class="lbl">Kích thước tối đa</div><div class="val">2000</div><div class="hint">N×N ma trận</div></div>
+  <div class="mc"><div class="lbl">Số luồng</div><div class="val">1–16</div><div class="hint">OpenMP threads</div></div>
+  <div class="mc"><div class="lbl">Phương pháp</div><div class="val">2</div><div class="hint">Jacobi + Gauss</div></div>
+  <div class="mc"><div class="lbl">Hội tụ Jacobi</div><div class="val">7–9</div><div class="hint">iterations</div></div>
+</div>
+
+<!-- TAB PANEL -->
+<div class="panel">
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('time')">Thời gian chạy</button>
+    <button class="tab" onclick="showTab('speedup')">Speedup</button>
+    <button class="tab" onclick="showTab('efficiency')">Efficiency</button>
+    <button class="tab" onclick="showTab('scale')">Độ phức tạp</button>
+  </div>
+  <div class="controls">
+    <label>Phương pháp:</label>
+    <select id="methodSel" onchange="renderCurrent()">
+      <option value="Jacobi">Jacobi</option>
+      <option value="Gauss">Khử Gauss</option>
+    </select>
+    <label id="nLbl">Kích thước N:</label>
+    <select id="nSel" onchange="renderCurrent()">
+      <option value="100">N=100</option>
+      <option value="200">N=200</option>
+      <option value="500">N=500</option>
+      <option value="1000" selected>N=1000</option>
+      <option value="2000">N=2000</option>
+    </select>
+  </div>
+  <div id="legendBox" class="legend"></div>
+  <div class="chart-wrap"><canvas id="mainChart" role="img" aria-label="Biểu đồ benchmark"></canvas></div>
+  <div id="noteBox" class="note"></div>
+</div>
+
+<!-- RAW DATA TABLE -->
+<div class="panel">
+  <h2>Bảng dữ liệu: Speedup &amp; Efficiency</h2>
+  <div class="controls">
+    <label>Phương pháp:</label>
+    <select id="tblMethod" onchange="renderTable()">
+      <option value="Jacobi">Jacobi</option>
+      <option value="Gauss">Khử Gauss</option>
+    </select>
+  </div>
+  <div style="overflow-x:auto">
+    <table id="dataTable">
+      <thead><tr><th>N</th><th>T_seq (ms)</th><th>T_par 1T (ms)</th><th>T_par 2T (ms)</th>
+      <th>T_par 4T (ms)</th><th>T_par 8T (ms)</th><th>T_par 16T (ms)</th>
+      <th>Speedup 4T</th><th>Eff 4T (%)</th></tr></thead>
+      <tbody id="tblBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const SEQ={100:{Jacobi:0.0608,Gauss:0.1462},200:{Jacobi:0.2226,Gauss:1.01},
+  500:{Jacobi:1.1479,Gauss:13.0124},1000:{Jacobi:5.5179,Gauss:150.02},
+  2000:{Jacobi:25.7858,Gauss:1192.32}};
+const PAR={
+  100:{Jacobi:{1:0.1341,2:0.3054,4:0.5188,8:1.2096,16:2.4745},Gauss:{1:0.1752,2:1.091,4:4.2732,8:6.5244,16:14.0789}},
+  200:{Jacobi:{1:0.2026,2:0.673,4:0.6937,8:1.3813,16:2.3098},Gauss:{1:1.0924,2:2.8685,4:6.2516,8:13.6712,16:28.7903}},
+  500:{Jacobi:{1:1.1276,2:1.6491,4:1.557,8:2.0445,16:3.2005},Gauss:{1:13.3048,2:17.8373,4:26.6607,8:45.9214,16:85.3097}},
+  1000:{Jacobi:{1:6.3643,2:7.4217,4:7.469,8:8.0042,16:9.328},Gauss:{1:147.335,2:158.98,4:176.93,8:217.1,16:297.73}},
+  2000:{Jacobi:{1:29.7612,2:32.4291,4:33.0478,8:33.031,16:33.6545},Gauss:{1:1292.13,2:1377.15,4:1327.22,8:1334.96,16:1540.89}}
+};
+const NS=[100,200,500,1000,2000], THREADS=[1,2,4,8,16];
+const C={seq:'#3266ad',t2:'#1D9E75',t4:'#BA7517',t16:'#993556',ideal:'#aaa'};
+let chart=null, currentTab='time';
+
+function getM(){return document.getElementById('methodSel').value}
+function getN(){return parseInt(document.getElementById('nSel').value)}
+function dc(n){return parseFloat(n.toFixed(2))}
+
+function destroyChart(){if(chart){chart.destroy();chart=null}}
+function setLegend(items){
+  document.getElementById('legendBox').innerHTML=items.map(i=>
+    `<span><b style="background:${i.c}"></b>${i.l}</span>`).join('')
+}
+
+function showTab(t){
+  currentTab=t;
+  document.querySelectorAll('.tab').forEach(b=>{
+    const labels={time:'thời gian',speedup:'speedup',efficiency:'efficiency',scale:'độ phức tạp'};
+    b.classList.toggle('active', b.textContent.toLowerCase().includes(labels[t]||t))
+  });
+  const show=t==='speedup'||t==='efficiency';
+  document.getElementById('nLbl').style.display=show?'':'none';
+  document.getElementById('nSel').style.display=show?'':'none';
+  renderCurrent();
+}
+
+function renderCurrent(){
+  if(currentTab==='time') renderTime();
+  else if(currentTab==='speedup') renderSpeedup();
+  else if(currentTab==='efficiency') renderEfficiency();
+  else renderScale();
+}
+
+function renderTime(){
+  destroyChart();
+  const m=getM();
+  document.querySelector('.chart-wrap').style.height='320px';
+  setLegend([{c:C.seq,l:'Tuần tự'},{c:C.seq+'88',l:'OMP 1T'},{c:C.t4,l:'OMP 4T'},{c:C.t16,l:'OMP 16T'}]);
+  chart=new Chart(document.getElementById('mainChart'),{
+    type:'bar',
+    data:{labels:NS.map(n=>'N='+n),datasets:[
+      {label:'Tuần tự',data:NS.map(n=>dc(SEQ[n][m])),backgroundColor:C.seq+'cc',borderColor:C.seq,borderWidth:1},
+      {label:'OMP 1T',data:NS.map(n=>dc(PAR[n][m][1])),backgroundColor:C.seq+'44',borderColor:C.seq,borderWidth:1},
+      {label:'OMP 4T',data:NS.map(n=>dc(PAR[n][m][4])),backgroundColor:C.t4+'99',borderColor:C.t4,borderWidth:1},
+      {label:'OMP 16T',data:NS.map(n=>dc(PAR[n][m][16])),backgroundColor:C.t16+'99',borderColor:C.t16,borderWidth:1}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
+      tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.raw+' ms'}}},
+      scales:{x:{ticks:{autoSkip:false}},y:{title:{display:true,text:'Thời gian (ms)'},ticks:{callback:v=>v+'ms'}}}}
+  });
+  document.getElementById('noteBox').textContent=
+    '⚠ Kết quả thực tế trên 1 CPU core. Overhead khởi tạo luồng OpenMP vượt trội lợi ích song song với N nhỏ. Trên máy 4-8 core, parallel sẽ nhanh hơn rõ rệt khi N ≥ 500.';
+}
+
+function renderSpeedup(){
+  destroyChart();
+  const m=getM(), n=getN();
+  document.querySelector('.chart-wrap').style.height='300px';
+  const Ts=SEQ[n][m];
+  const actual=THREADS.map(t=>dc(Ts/PAR[n][m][t]));
+  const sim=THREADS.map(t=>dc(t/(1+0.1*(t-1))));
+  setLegend([{c:C.seq,l:'Thực tế (1 core)'},{c:C.t2,l:'Mô phỏng đa core (Amdahl)'},{c:C.ideal,l:'Lý tưởng'}]);
+  chart=new Chart(document.getElementById('mainChart'),{type:'line',
+    data:{labels:THREADS.map(t=>t+'T'),datasets:[
+      {label:'Thực tế',data:actual,borderColor:C.seq,fill:false,tension:0.3,pointRadius:5,pointStyle:'circle'},
+      {label:'Mô phỏng',data:sim,borderColor:C.t2,fill:false,tension:0.3,borderDash:[5,4],pointRadius:5,pointStyle:'triangle'},
+      {label:'Lý tưởng',data:THREADS,borderColor:C.ideal,borderDash:[3,3],fill:false,pointRadius:0}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{title:{display:true,text:'Số luồng'}},
+        y:{title:{display:true,text:'Speedup S(p)'},min:0,ticks:{callback:v=>v+'×'}}}}
+  });
+  document.getElementById('noteBox').innerHTML=
+    `S(p) = T_seq / T_par(p). Trên 1 core, overhead khiến S < 1. Mô phỏng Amdahl's Law (serial ≈ 10%) cho thấy tiềm năng thực tế. N=${n}, ${m}.`;
+}
+
+function renderEfficiency(){
+  destroyChart();
+  const m=getM(), n=getN();
+  document.querySelector('.chart-wrap').style.height='300px';
+  const Ts=SEQ[n][m];
+  const actual=THREADS.map(t=>dc((Ts/PAR[n][m][t])/t*100));
+  const sim=THREADS.map(t=>dc((t/(1+0.1*(t-1)))/t*100));
+  setLegend([{c:C.seq,l:'Thực tế'},{c:C.t2,l:'Mô phỏng'},{c:C.ideal,l:'Lý tưởng 100%'}]);
+  chart=new Chart(document.getElementById('mainChart'),{type:'line',
+    data:{labels:THREADS.map(t=>t+'T'),datasets:[
+      {label:'Thực tế',data:actual,borderColor:C.seq,fill:false,tension:0.3,pointRadius:5},
+      {label:'Mô phỏng',data:sim,borderColor:C.t2,fill:false,tension:0.3,borderDash:[5,4],pointRadius:5},
+      {label:'Lý tưởng',data:THREADS.map(()=>100),borderColor:C.ideal,borderDash:[3,3],fill:false,pointRadius:0}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{title:{display:true,text:'Số luồng'}},
+        y:{title:{display:true,text:'Efficiency (%)'},min:0,max:150,ticks:{callback:v=>v+'%'}}}}
+  });
+  document.getElementById('noteBox').textContent=
+    `E(p) = S(p)/p × 100%. Lý tưởng E=100%. Giảm khi tăng threads do overhead. N=${n}, ${m}.`;
+}
+
+function renderScale(){
+  destroyChart();
+  document.querySelector('.chart-wrap').style.height='300px';
+  setLegend([{c:C.t2,l:'Jacobi O(k·n²)'},{c:C.t4,l:'Khử Gauss O(n³)'}]);
+  chart=new Chart(document.getElementById('mainChart'),{type:'line',
+    data:{labels:NS.map(n=>'N='+n),datasets:[
+      {label:'Jacobi',data:NS.map(n=>SEQ[n].Jacobi),borderColor:C.t2,backgroundColor:C.t2+'33',fill:true,tension:0.4,pointRadius:5},
+      {label:'Gauss',data:NS.map(n=>SEQ[n].Gauss),borderColor:C.t4,backgroundColor:C.t4+'33',fill:true,tension:0.4,pointRadius:5}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{ticks:{autoSkip:false}},y:{title:{display:true,text:'Thời gian (ms)'},ticks:{callback:v=>v.toFixed(0)+'ms'}}}}
+  });
+  document.getElementById('noteBox').textContent=
+    'Jacobi O(k·n²) tăng chậm hơn nhiều so với Gauss O(n³). N=2000: Gauss ~1192ms vs Jacobi ~25ms. Jacobi dễ song song hóa hơn vì tính từng xᵢ mới độc lập.';
+}
+
+function renderTable(){
+  const m=document.getElementById('tblMethod').value;
+  const tbody=document.getElementById('tblBody');
+  tbody.innerHTML=NS.map(n=>{
+    const ts=SEQ[n][m];
+    const s4=ts/PAR[n][m][4], e4=s4/4*100;
+    const badge=(v,ok)=>`<span class="badge ${ok?'good':'bad'}">${v}</span>`;
+    return `<tr>
+      <td><strong>${n}</strong></td>
+      <td>${ts.toFixed(3)}</td>
+      <td>${PAR[n][m][1].toFixed(3)}</td>
+      <td>${PAR[n][m][2].toFixed(3)}</td>
+      <td>${PAR[n][m][4].toFixed(3)}</td>
+      <td>${PAR[n][m][8].toFixed(3)}</td>
+      <td>${PAR[n][m][16].toFixed(3)}</td>
+      <td>${badge(s4.toFixed(2)+'×', s4>1)}</td>
+      <td>${badge(e4.toFixed(1)+'%', e4>70)}</td>
+    </tr>`;
+  }).join('');
+}
+
+showTab('time');
+renderTable();
+document.getElementById('nLbl').style.display='none';
+document.getElementById('nSel').style.display='none';
+</script>
+</body>
+</html>
