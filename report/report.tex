@@ -1,0 +1,371 @@
+\documentclass[12pt,a4paper]{report}
+\usepackage[utf8]{vietnam}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{fancyhdr}
+\usepackage{indentfirst}
+
+% Cấu hình lề trang theo chuẩn báo cáo học thuật Việt Nam
+\geometry{
+    a4paper,
+    left=30mm,
+    right=20mm,
+    top=25mm,
+    bottom=25mm
+}
+
+% Cấu hình đường dẫn liên kết trong PDF
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+    pdftitle={Bao cao Tinh toan song song},
+    pdfpagemode=FullScreen,
+}
+
+% Định nghĩa màu sắc cho code block (listings)
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.96,0.96,0.96}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{blue}\bfseries,
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\small,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=4,
+    frame=single,
+    rulecolor=\color{lightgray}
+}
+\lstset{style=mystyle}
+
+% Cấu hình header & footer
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{\small Báo cáo môn học: Tính toán song song}
+\lfoot{\small Đại học Bách khoa Hà Nội}
+\rfoot{\small Trang \thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+% Định khoảng cách dòng
+\renewcommand{\baselinestretch}{1.3}
+
+\begin{document}
+
+% =========================================================================
+% TRANG BÌA CHUẨN ĐẠI HỌC BÁCH KHOA HÀ NỘI
+% =========================================================================
+\begin{titlepage}
+    \begin{center}
+        \textbf{\large ĐẠI HỌC BÁCH KHOA HÀ NỘI} \\
+        \textbf{\large KHOA TOÁN - TIN}
+        
+        \vspace{1.5cm}
+        
+        % Khung vẽ nghệ thuật nhỏ đại diện cho Logo
+        \begin{figure}[h!]
+            \centering
+            \setlength{\unitlength}{1mm}
+            \begin{picture}(30,30)
+                \put(0,0){\framebox(30,30)[c]{\textbf{\large HUST}}}
+            \end{picture}
+        \end{figure}
+        
+        \vspace{1.5cm}
+        
+        \textbf{\Large BÁO CÁO THỰC HÀNH} \\
+        \vspace{0.5cm}
+        \textbf{\LARGE MÔN HỌC: TÍNH TÍNH SONG SONG}
+        
+        \vspace{2.5cm}
+        
+        \begin{table}[h]
+            \centering
+            \begin{tabular}{ll}
+                \textbf{Giảng viên hướng dẫn:} & (Tên Giảng Viên) \\
+                \textbf{Nhóm sinh viên thực hiện:} & Phạm Minh Thùy - MSHV: 20261051M \\
+                & Trần Thị Khánh Huyền - MSHV: 20252875M \\
+            \end{tabular}
+        \end{table}
+        
+        \vfill
+        
+        \textbf{\large Hà Nội, Năm 2026}
+    \end{center}
+\end{titlepage}
+
+\newpage
+
+% =========================================================================
+% TRANG 1: MỤC LỤC
+% =========================================================================
+\pagenumbering{roman} % Đánh số trang la mã cho phần đầu
+\setcounter{page}{1}
+\pdfbookmark{\contentsname}{toc}
+\tableofcontents
+
+\newpage
+
+% =========================================================================
+% TRANG TIẾP: LỜI MỞ ĐẦU & NỘI DUNG BÁO CÁO
+% =========================================================================
+\pagenumbering{arabic} % Đánh số trang thường từ đây
+\setcounter{page}{2}
+
+\chapter*{Giới thiệu về báo cáo}
+\addcontentsline{toc}{chapter}{Giới thiệu về báo cáo}
+
+Môn học \textbf{Tính toán song song} cung cấp các kiến thức cơ bản và nâng cao về lập trình đa xử lý trên hệ thống máy tính hiện đại. Trong báo cáo này, nhóm thực hiện lập trình và thử nghiệm các bài toán số học cơ bản bằng công cụ \textbf{OpenMP} (Open Multi-Processing) - một API hỗ trợ lập trình song song bộ nhớ chia sẻ phổ biến và mạnh mẽ trên C/C++ và Fortran.
+
+Nội dung báo cáo tập trung vào hai bài tập thực hành chính:
+\begin{enumerate}
+    \item \textbf{Bài tập 1: Cộng hai vector và mở rộng tính tích vô hướng của hai vector}: Thực hiện song song hóa vòng lặp tính toán trên vector, thử nghiệm hiệu năng và tính đúng đắn với các kích thước dữ liệu khác nhau.
+    \item \textbf{Bài tập 2: Giải hệ phương trình tuyến tính}: Sử dụng hai phương pháp phổ biến là phương pháp khử Gauss và phương pháp lặp Jacobi. Báo cáo này sẽ trình bày chi tiết về phần thuật toán và lập trình song song của phương pháp khử Gauss. Phần phương pháp Jacobi sẽ do thành viên khác trong nhóm phụ trách hoàn thiện.
+\end{enumerate}
+
+Báo cáo bao gồm phân tích lý thuyết thuật toán, giải thích chi tiết từng đoạn mã nguồn C++ có tích hợp OpenMP và đưa ra các kết quả thử nghiệm thực tế từ chương trình.
+
+% =========================================================================
+% CHƯƠNG 1: BÀI TẬP 1 - VECTOR OPERATIONS
+% =========================================================================
+\chapter{Bài tập 1: Cộng và Tích vô hướng hai Vector}
+
+\section{Mô tả bài toán}
+Cho hai vector số thực $A = (a_0, a_1, \dots, a_{n-1})$ và $B = (b_0, b_1, \dots, b_{n-1})$ cùng kích thước $n$.
+\begin{itemize}
+    \item \textbf{Cộng hai vector}: Kết quả là một vector $C = A + B$ với các phần tử được tính theo công thức:
+    \begin{equation}
+        c_i = a_i + b_i \quad \forall i = 0, \dots, n-1
+    \end{equation}
+    \item \textbf{Tích vô hướng hai vector}: Kết quả là một số thực $S = A \cdot B$ được tính theo công thức:
+    \begin{equation}
+        S = \sum_{i=0}^{n-1} a_i \times b_i
+    \end{equation}
+\end{itemize}
+
+Cả hai bài toán đều có tính chất độc lập dữ liệu cao ở cấp độ phần tử, rất thích hợp cho việc lập trình song song hóa vòng lặp bằng cách chia các phần tử cho nhiều luồng (thread) xử lý đồng thời.
+
+\section{Phân tích và Giải thích chi tiết mã nguồn}
+Dưới đây là mã nguồn C++ tính tổng hai vector bằng OpenMP được cài đặt trong tệp \texttt{vector\_sum\_openmp.cpp}:
+
+\begin{lstlisting}[language=C++, caption={Hàm cộng hai vector song song bằng OpenMP}]
+vector<double> sumVectors(const vector<double>& a, const vector<double>& b) {
+    // 1. Lay so chieu cua vector.
+    int n = static_cast<int>(a.size());
+    // 2. Tao vector ket qua co cung kich thuoc.
+    vector<double> result(n);
+
+    // 3. Tinh tong song song: moi luong xu ly mot phan phan tu.
+    #pragma omp parallel for
+    for (int i = 0; i < n; i++) {
+        result[i] = a[i] + b[i];
+    }
+
+    return result;
+}
+\end{lstlisting}
+
+\subsection*{Giải thích chi tiết hoạt động của mã nguồn:}
+\begin{itemize}
+    \item \textbf{Dòng 3}: \texttt{int n = static\_cast<int>(a.size());} \\
+    Lấy kích thước của vector đầu vào. Hàm trả về kiểu \texttt{size\_t} nên ta dùng \texttt{static\_cast<int>} để chuyển về kiểu số nguyên \texttt{int} nhằm đồng bộ kiểu dữ liệu với vòng lặp sau đó.
+    \item \textbf{Dòng 5}: \texttt{vector<double> result(n);} \\
+    Cập phát vùng nhớ cho vector kết quả có cùng kích thước $n$ để chuẩn bị lưu giá trị cộng của từng phần tử.
+    \item \textbf{Dòng 8}: \texttt{\#pragma omp parallel for} \\
+    Đây là chỉ thị song song hóa vòng lặp quan trọng nhất của OpenMP.
+    \begin{itemize}
+        \item \texttt{omp parallel}: Yêu cầu trình biên dịch tạo ra một nhóm các luồng (thread team) chạy song song.
+        \item \texttt{for}: Yêu cầu phân chia tự động các bước lặp của vòng lặp \texttt{for} ngay phía sau cho các luồng xử lý. Ví dụ, nếu CPU chạy với 4 luồng và $n = 1000$, luồng 0 sẽ xử lý chỉ số từ $0 \to 249$, luồng 1 từ $250 \to 499$, luồng 2 từ $500 \to 749$, và luồng 3 từ $750 \to 999$.
+    \end{itemize}
+    \item \textbf{Dòng 9-10}: \texttt{for (int i = 0; i < n; i++) \{ result[i] = a[i] + b[i]; \}} \\
+    Mỗi luồng thực hiện phép cộng trên đoạn chỉ số của riêng mình độc lập. Vì các luồng truy cập và ghi dữ liệu vào các phần tử khác nhau của mảng kết quả (\texttt{result[i]}), không xảy ra hiện tượng tranh chấp dữ liệu (Race Condition).
+\end{itemize}
+
+\subsection*{Mở rộng sang bài toán Tích vô hướng:}
+Khác với phép cộng vector (sinh ra một mảng mới), phép tính tích vô hướng yêu cầu dồn tất cả kết quả nhân phần tử $a_i \times b_i$ vào một biến vô hướng duy nhất $S$. Nếu song song hóa thông thường, nhiều luồng ghi đè vào cùng một địa chỉ bộ nhớ của biến $S$ sẽ gây ra lỗi tranh chấp dữ liệu.
+Để giải quyết điều này, ta sử dụng cơ chế \textbf{Reduction} của OpenMP:
+
+\begin{lstlisting}[language=C++, caption={Thuật toán tích vô hướng song song sử dụng reduction}]
+double dotProduct(const vector<double>& a, const vector<double>& b) {
+    int n = static_cast<int>(a.size());
+    double sum = 0.0;
+
+    #pragma omp parallel for reduction(+:sum)
+    for (int i = 0; i < n; i++) {
+        sum += a[i] * b[i];
+    }
+    return sum;
+}
+\end{lstlisting}
+
+\textbf{Cơ chế hoạt động của \texttt{reduction(+:sum)}:}
+\begin{enumerate}
+    \item OpenMP sẽ tạo ra bản sao cục bộ (private copy) của biến \texttt{sum} cho từng luồng và khởi tạo nó bằng giá trị trung hòa của phép cộng (là \texttt{0.0}).
+    \item Mỗi luồng thực hiện cộng dồn tích $a_i \times b_i$ vào bản sao cục bộ của mình.
+    \item Sau khi vòng lặp kết thúc, các luồng tiến hành cộng gộp (reduce) an toàn các giá trị cục bộ này vào biến \texttt{sum} toàn cục để ra kết quả cuối cùng.
+\end{enumerate}
+
+\section{Kết quả thực nghiệm}
+Chương trình tính tổng vector đã được chạy kiểm nghiệm trên $18$ bộ test có kích thước từ $3$ đến $20$. Dưới đây là bảng trích dẫn một số kết quả chạy tiêu biểu thu được:
+
+\begin{table}[h!]
+    \centering
+    \caption{Kết quả chạy kiểm thử cộng hai vector song song}
+    \vspace{0.2cm}
+    \begin{tabular}{cccc}
+        \toprule
+        \textbf{Bộ test thứ} & \textbf{Kích thước (n)} & \textbf{Vector đầu vào (A và B)} & \textbf{Kết quả (C = A + B)} \\
+        \midrule
+        1 & 3 & $A=[1, 2, 3]$, $B=[4, 5, 6]$ & $[5, 7, 9]$ \\
+        2 & 4 & $A=[1..4]$, $B=[5..8]$ & $[6, 8, 10, 12]$ \\
+        3 & 5 & $A=[1..5]$, $B=[6..10]$ & $[7, 9, 11, 13, 15]$ \\
+        4 & 10 & $A=[1..10]$, $B=[11..20]$ & $[12, 14, 16, 18, 20, 22, 24, 26, 28, 30]$ \\
+        5 & 20 & $A=[1..20]$, $B=[21..40]$ & $[22, 24, 26, \dots, 58, 60]$ \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+Chương trình cho kết quả trùng khớp hoàn toàn với kết quả mong đợi trên toàn bộ các bộ test kích thước khác nhau, chứng minh tính đúng đắn của giải pháp song song.
+
+% =========================================================================
+% CHƯƠNG 2: BÀI TẬP 2 - SOLVING LINEAR SYSTEMS
+% =========================================================================
+\chapter{Bài tập 2: Giải hệ phương trình tuyến tính}
+
+\section{Lý thuyết phương pháp khử Gauss}
+Hệ phương trình tuyến tính có dạng $A x = B$, trong đó $A$ là ma trận hệ số kích thước $n \times n$, $B$ là vector vế phải kích thước $n$, và $x$ là vector ẩn cần tìm.
+
+Phương pháp khử Gauss chia làm hai giai đoạn chính:
+\begin{enumerate}
+    \item \textbf{Khử xuôi (Forward Elimination)}: Biến đổi ma trận bổ sung $[A|B]$ về dạng ma trận tam giác trên thông qua các phép biến đổi sơ cấp dòng.
+    \item \textbf{Thế ngược (Backward Substitution)}: Tính toán lần lượt giá trị của các nghiệm từ nghiệm cuối cùng $x_{n-1}$ lên đến nghiệm đầu tiên $x_0$.
+\end{enumerate}
+
+\section{Phân tích song song hóa bằng OpenMP}
+Trong giai đoạn Khử xuôi, tại mỗi bước lặp cột $i$ (chốt), ta cần biến đổi tất cả các dòng nằm phía dưới dòng $i$. Các dòng này có thể được xử lý độc lập với nhau, đây là cơ hội tuyệt vời để song song hóa.
+
+Dưới đây là phần triển khai mã nguồn giải hệ phương trình tuyến tính bằng phương pháp khử Gauss trong tệp \texttt{solvers.cpp}:
+
+\begin{lstlisting}[language=C++, caption={Thuật toán khử Gauss song song hóa với OpenMP}]
+std::vector<double> solveGauss(const std::vector<std::vector<double>>& A, const std::vector<double>& B) {
+    int n = A.size();
+    std::vector<std::vector<double>> tempA = A;
+    std::vector<double> tempB = B;
+
+    for (int i = 0; i < n; ++i) {
+        // 1. Chon phan tu troi (partial pivoting)
+        int pivot = i;
+        for (int j = i + 1; j < n; ++j) {
+            if (std::abs(tempA[j][i]) > std::abs(tempA[pivot][i])) {
+                pivot = j;
+            }
+        }
+        if (pivot != i) {
+            std::swap(tempA[i], tempA[pivot]);
+            std::swap(tempB[i], tempB[pivot]);
+        }
+        if (std::abs(tempA[i][i]) < 1e-9) {
+            throw std::runtime_error("Ma tran suy bien, khong the giai bang Gauss.");
+        }
+
+        // 2. Khu xuoi song song hoa bang OpenMP
+        #pragma omp parallel for if(n >= 3)
+        for (int j = i + 1; j < n; ++j) {
+            double factor = tempA[j][i] / tempA[i][i];
+            tempA[j][i] = 0.0;
+            for (int k = i + 1; k < n; ++k) {
+                tempA[j][k] -= factor * tempA[i][k];
+            }
+            tempB[j] -= factor * tempB[i];
+        }
+    }
+
+    // 3. The nguoc (tuan tu vi co tinh phu thuoc du lieu nguoc)
+    std::vector<double> x(n);
+    for (int i = n - 1; i >= 0; --i) {
+        double sum = 0.0;
+        for (int j = i + 1; j < n; ++j) {
+            sum += tempA[i][j] * x[j];
+        }
+        x[i] = (tempB[i] - sum) / tempA[i][i];
+    }
+    return x;
+}
+\end{lstlisting}
+
+\subsection*{Phân tích chi tiết mã nguồn:}
+\begin{itemize}
+    \item \textbf{Phần 1: Chọn phần tử trội (Dòng 7-20)} \\
+    Trong quá trình tính toán số học, để giảm thiểu sai số làm tròn và tránh lỗi chia cho $0$, việc tìm dòng chứa phần tử có giá trị tuyệt đối lớn nhất ở cột đang xét để đưa lên làm phần tử chốt (pivot) là cực kỳ quan trọng. Quá trình chọn phần tử trội này được thực hiện tuần tự để đảm bảo tính chính xác trước khi thực hiện khử.
+    \item \textbf{Phần 2: Khử xuôi song song hóa (Dòng 22-31)} \\
+    Chỉ thị \texttt{\#pragma omp parallel for if(n >= 3)} được sử dụng.
+    \begin{itemize}
+        \item Mệnh đề \texttt{if(n >= 3)} giúp kiểm tra điều kiện kích thước ma trận. Với các hệ phương trình quá nhỏ (ví dụ $2 \times 2$), chi phí tạo lập và đồng bộ hóa luồng (thread overhead) lớn hơn thời gian tính toán thực tế. Vì vậy, ta chỉ song song hóa khi ma trận đủ lớn ($n \ge 3$).
+        \item Mỗi luồng phụ trách thực hiện trừ dòng dòng $j$ đi một tỷ lệ thích hợp so với dòng chốt $i$ để triệt tiêu hệ số tại cột $i$. Do các phép biến đổi trên các dòng $j$ khác nhau là độc lập và không ghi đè lẫn nhau, quá trình này hoàn toàn an toàn và đạt gia tốc cao trên phần cứng đa nhân.
+    \end{itemize}
+    \item \textbf{Phần 3: Thế ngược tuần tự (Dòng 34-43)} \\
+    Giai đoạn thế ngược không thể song song hóa theo cách đơn giản vì bước tính nghiệm $x_i$ phụ thuộc trực tiếp vào các nghiệm đã tính trước đó $x_{i+1}, x_{i+2}, \dots, x_{n-1}$. Do đó, vòng lặp thế ngược chạy lùi từ $n-1$ về $0$ bắt buộc phải thực hiện tuần tự để bảo toàn tính đúng đắn về mặt toán học.
+\end{itemize}
+
+\section{Kết quả thực nghiệm Gauss}
+Hàm giải hệ phương trình tuyến tính bằng thuật toán khử Gauss song song đã được chạy kiểm nghiệm thực tế trên bộ dữ liệu kiểm thử kích thước $3 \times 3$ trong \texttt{input.json}:
+\begin{itemize}
+    \item \textbf{Đầu vào}:
+    \[
+    A = \begin{bmatrix}
+        3 & 2 & -4 \\
+        2 & 3 & 3 \\
+        5 & -3 & 1
+    \end{bmatrix}, \quad
+    B = \begin{bmatrix}
+        3 \\ 15 \\ 14
+    \end{bmatrix}
+    \]
+    \item \textbf{Kết quả chạy chương trình}:
+    \begin{itemize}
+        \item Kết quả nghiệm tìm được: $x = [3, 1, 2]$.
+        \item Nghiệm kỳ vọng mong đợi: $x_{exp} = [3, 1, 2]$.
+        \item Sai số tối đa thu được so với nghiệm chuẩn: $4.44089 \times 10^{-16}$.
+        \item Trạng thái: \textbf{PASSED} (Đạt chuẩn chính xác cao).
+    \end{itemize}
+\end{itemize}
+
+\section{Phương pháp lặp Jacobi (Khung đề mục hoàn thiện)}
+\textit{Lưu ý: Phần phương pháp lặp Jacobi và song song hóa của nó do thành viên Trần Thị Khánh Huyền chịu trách nhiệm nghiên cứu, cài đặt mã nguồn và sẽ trình bày chi tiết tại mục này trong các phiên bản báo cáo tiếp theo.}
+
+% =========================================================================
+% KẾT LUẬN
+% =========================================================================
+\chapter*{Kết luận}
+\addcontentsline{toc}{chapter}{Kết luận}
+
+Qua bài thực hành lớn môn học Tính toán song song, nhóm đã thu hoạch được các kết quả quan trọng sau:
+\begin{enumerate}
+    \item Hiểu rõ và áp dụng thành công API OpenMP để tăng tốc các bài toán tính toán số học phổ biến bao gồm các phép toán trên vector (cộng, tích vô hướng) và giải hệ phương trình đại số tuyến tính (phương pháp khử Gauss).
+    \item Nắm vững các chỉ thị song song cơ bản như \texttt{\#pragma omp parallel for}, kỹ thuật xử lý tranh chấp dữ liệu bằng \texttt{reduction}, và cách tinh chỉnh hiệu năng thông qua mệnh đề điều kiện \texttt{if}.
+    \item Kiểm chứng tính đúng đắn và độ chính xác của các chương trình đã song song hóa thông qua các bộ dữ liệu thử nghiệm thực tế với nhiều kích thước khác nhau.
+\end{enumerate}
+
+Nhóm sinh viên chân thành cảm ơn sự hướng dẫn tận tình của thầy cô bộ môn giúp nhóm hoàn thành tốt bài thực hành này.
+
+\end{document}

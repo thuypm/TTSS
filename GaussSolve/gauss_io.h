@@ -1,7 +1,8 @@
 #ifndef GAUSS_IO_H
 #define GAUSS_IO_H
 
-#include <bits/stdc++.h>
+#include <string>
+#include <vector>
 
 struct LinearSystemTest {
     std::string name;

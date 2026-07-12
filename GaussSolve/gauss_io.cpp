@@ -1,6 +1,10 @@
 #include "gauss_io.h"
 
-#include <bits/stdc++.h>
+#include <string>
+#include <vector>
+#include <sstream>
+#include <fstream>
+#include <stdexcept>
 
 using namespace std;
 
