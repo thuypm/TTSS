@@ -1,0 +1,22 @@
+\begin{tikzpicture}
+\begin{axis}[
+  title={Hi\d{e}u su\'\^{a}t song song},
+  xlabel={K\'ich th\u{u}\'{o}c vector $n$},
+  ylabel={Hi\d{e}u su\'\^{a}t $E(p) = S(p)/p$},
+  xtick=data,
+  xticklabels={1M,5M,10M,50M,100M},
+  ymin=0, ymax=1.2,
+  legend pos=south east,
+  ymajorgrids=true,
+  grid style=dashed,
+  width=0.85\textwidth,
+  height=6cm,
+]
+\addplot+[mark=square*] coordinates {(1,0.7501) (2,0.8500) (3,0.6667) (4,0.6992) (5,0.7398)};
+\addlegendentry{$p=2$ lu\`{o}ng}
+\addplot+[mark=triangle*] coordinates {(1,0.3749) (2,0.2361) (3,0.2105) (4,0.2062) (5,0.2163)};
+\addlegendentry{$p=8$ lu\`{o}ng}
+\addplot+[dashed,mark=none,black] coordinates {(1,1.0) (2,1.0) (3,1.0) (4,1.0) (5,1.0)};
+\addlegendentry{L\'{\^{y}} t\u{u}\'{o}ng}
+\end{axis}
+\end{tikzpicture}

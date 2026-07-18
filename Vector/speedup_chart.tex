@@ -1,0 +1,23 @@
+\begin{tikzpicture}
+\begin{axis}[
+  title={Speedup theo k\'ich th\u{u}\'{o}c vector},
+  xlabel={K\'ich th\u{u}\'{o}c vector $n$},
+  ylabel={Speedup $S(p) = T_1 / T_p$},
+  xtick=data,
+  xticklabels={1M,5M,10M,50M,100M},
+  legend pos=north west,
+  ymajorgrids=true,
+  grid style=dashed,
+  width=0.85\textwidth,
+  height=6cm,
+]
+\addplot+[mark=square*] coordinates {(1,1.5001) (2,1.7000) (3,1.3333) (4,1.3983) (5,1.4796)};
+\addlegendentry{$p=2$ lu\`{o}ng}
+\addplot+[mark=triangle*] coordinates {(1,2.9995) (2,1.8889) (3,1.6842) (4,1.6500) (5,1.7302)};
+\addlegendentry{$p=8$ lu\`{o}ng}
+\addplot+[dashed,mark=none] coordinates {(1,2) (2,2) (3,2) (4,2) (5,2)};
+\addlegendentry{L\'{y} t\u{u}\'{o}ng $p=2$}
+\addplot+[dashed,mark=none] coordinates {(1,8) (2,8) (3,8) (4,8) (5,8)};
+\addlegendentry{L\'{y} t\u{u}\'{o}ng $p=8$}
+\end{axis}
+\end{tikzpicture}

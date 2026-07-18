@@ -1,11 +1,12 @@
 \contentsline {chapter}{Giới thiệu về báo cáo}{2}{chapter*.2}%
-\contentsline {chapter}{\numberline {1}Bài tập 1: Cộng và Tích vô hướng hai Vector}{3}{chapter.1}%
+\contentsline {chapter}{\numberline {1}Bài tập 1: Tích vô hướng hai Vector}{3}{chapter.1}%
 \contentsline {section}{\numberline {1.1}Mô tả bài toán}{3}{section.1.1}%
-\contentsline {section}{\numberline {1.2}Phân tích và Giải thích chi tiết mã nguồn}{3}{section.1.2}%
-\contentsline {section}{\numberline {1.3}Kết quả thực nghiệm}{5}{section.1.3}%
-\contentsline {chapter}{\numberline {2}Bài tập 2: Giải hệ phương trình tuyến tính}{7}{chapter.2}%
-\contentsline {section}{\numberline {2.1}Lý thuyết phương pháp khử Gauss}{7}{section.2.1}%
-\contentsline {section}{\numberline {2.2}Phân tích song song hóa bằng OpenMP}{7}{section.2.2}%
-\contentsline {section}{\numberline {2.3}Kết quả thực nghiệm Gauss}{9}{section.2.3}%
-\contentsline {section}{\numberline {2.4}Phương pháp lặp Jacobi (Khung đề mục hoàn thiện)}{10}{section.2.4}%
-\contentsline {chapter}{Kết luận}{11}{chapter*.6}%
+\contentsline {section}{\numberline {1.2}Phân tích mã nguồn}{3}{section.1.2}%
+\contentsline {section}{\numberline {1.3}Kết quả thực nghiệm}{4}{section.1.3}%
+\contentsline {chapter}{\numberline {2}Bài tập 2: Giải hệ phương trình tuyến tính}{8}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Lý thuyết phương pháp khử Gauss}{8}{section.2.1}%
+\contentsline {section}{\numberline {2.2}Phân tích song song hóa bằng OpenMP}{8}{section.2.2}%
+\contentsline {subsection}{\numberline {2.2.1}Ví dụ minh họa khử Gauss từng bước hệ phương trình $4 \times 4$ phức tạp}{10}{subsection.2.2.1}%
+\contentsline {section}{\numberline {2.3}Kết quả thực nghiệm Gauss}{13}{section.2.3}%
+\contentsline {section}{\numberline {2.4}Phương pháp lặp Jacobi (Khung đề mục hoàn thiện)}{14}{section.2.4}%
+\contentsline {chapter}{Kết luận}{15}{chapter*.14}%
