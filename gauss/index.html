@@ -365,19 +365,19 @@
                 </div>
                 <div class="stats-grid" style="margin-top: 1.5rem; margin-bottom: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;">
                     <div class="stat-card" style="padding: 1rem; border-radius: 12px; background: rgba(59, 130, 246, 0.05); text-align: center; border: 1px solid rgba(255, 255, 255, 0.05);">
-                        <div class="stat-label" style="font-size: 0.75rem; letter-spacing: 0.5px; margin-bottom: 0.25rem;">Cải thiện (1 Luồng)</div>
+                        <div class="stat-label" style="font-size: 0.75rem; letter-spacing: 0.5px; margin-bottom: 0.25rem;">Gia tốc Blocked (1 Luồng)</div>
                         <div class="stat-value" id="opt-speedup-1" style="font-size: 1.5rem; color: #60a5fa; font-weight: 700;">-</div>
                     </div>
                     <div class="stat-card" style="padding: 1rem; border-radius: 12px; background: rgba(168, 85, 247, 0.05); text-align: center; border: 1px solid rgba(255, 255, 255, 0.05);">
-                        <div class="stat-label" style="font-size: 0.75rem; letter-spacing: 0.5px; margin-bottom: 0.25rem;">Cải thiện (2 Luồng)</div>
+                        <div class="stat-label" style="font-size: 0.75rem; letter-spacing: 0.5px; margin-bottom: 0.25rem;">Gia tốc Blocked (2 Luồng)</div>
                         <div class="stat-value" id="opt-speedup-2" style="font-size: 1.5rem; color: #a855f7; font-weight: 700;">-</div>
                     </div>
                     <div class="stat-card" style="padding: 1rem; border-radius: 12px; background: rgba(245, 158, 11, 0.05); text-align: center; border: 1px solid rgba(255, 255, 255, 0.05);">
-                        <div class="stat-label" style="font-size: 0.75rem; letter-spacing: 0.5px; margin-bottom: 0.25rem;">Cải thiện (8 Luồng)</div>
+                        <div class="stat-label" style="font-size: 0.75rem; letter-spacing: 0.5px; margin-bottom: 0.25rem;">Gia tốc Blocked (8 Luồng)</div>
                         <div class="stat-value" id="opt-speedup-8" style="font-size: 1.5rem; color: #f59e0b; font-weight: 700;">-</div>
                     </div>
                     <div class="stat-card" style="padding: 1rem; border-radius: 12px; background: rgba(16, 185, 129, 0.05); text-align: center; border: 1px solid rgba(255, 255, 255, 0.05);">
-                        <div class="stat-label" style="font-size: 0.75rem; letter-spacing: 0.5px; margin-bottom: 0.25rem;">Cải thiện (12 Luồng)</div>
+                        <div class="stat-label" style="font-size: 0.75rem; letter-spacing: 0.5px; margin-bottom: 0.25rem;">Gia tốc Blocked (12 Luồng)</div>
                         <div class="stat-value" id="opt-speedup-12" style="font-size: 1.5rem; color: #10b981; font-weight: 700;">-</div>
                     </div>
                 </div>
@@ -414,7 +414,7 @@
         Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.05)';
         Chart.defaults.font.family = "'Outfit', sans-serif";
 
-        fetch('data.json')
+        fetch('data.json?v=' + Date.now())
             .then(response => {
                 if (!response.ok) throw new Error("Không thể tải file");
                 return response.json();
@@ -628,7 +628,7 @@
                 });
 
                 // Tải dữ liệu so sánh tối ưu hóa
-                fetch('opt_data.json')
+                fetch('opt_data.json?v=' + Date.now())
                     .then(res => {
                         if (!res.ok) throw new Error("Không tìm thấy file so sánh");
                         return res.json();
@@ -639,10 +639,8 @@
                         const threads = optData.threads;
                         for (let i = 0; i < threads.length; i++) {
                             const t = threads[i];
-                            const ratio = optData.original[i] / optData.optimized[i];
-                            const percent = ((ratio - 1) * 100).toFixed(1);
-                            const sign = percent >= 0 ? '+' : '';
-                            document.getElementById(`opt-speedup-${t}`).innerText = `${sign}${percent}%`;
+                            const ratio = optData.original[i] / optData.blocked[i];
+                            document.getElementById(`opt-speedup-${t}`).innerText = `${ratio.toFixed(2)}x`;
                         }
 
                         new Chart(document.getElementById('optChart'), {
@@ -653,14 +651,21 @@
                                     {
                                         label: 'Bản gốc (Original - vector<vector>)',
                                         data: optData.original,
-                                        backgroundColor: 'rgba(239, 68, 68, 0.6)',
+                                        backgroundColor: 'rgba(239, 68, 68, 0.5)',
                                         borderColor: '#ef4444',
                                         borderWidth: 1.5
                                     },
                                     {
-                                        label: 'Bản tối ưu (1D Array + Single Parallel)',
+                                        label: 'Tối ưu phẳng (1D Array + Single Parallel)',
                                         data: optData.optimized,
-                                        backgroundColor: 'rgba(16, 185, 129, 0.6)',
+                                        backgroundColor: 'rgba(245, 158, 11, 0.5)',
+                                        borderColor: '#f59e0b',
+                                        borderWidth: 1.5
+                                    },
+                                    {
+                                        label: 'Chia khối (Blocked LU, B=64)',
+                                        data: optData.blocked,
+                                        backgroundColor: 'rgba(16, 185, 129, 0.5)',
                                         borderColor: '#10b981',
                                         borderWidth: 1.5
                                     }

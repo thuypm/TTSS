@@ -317,10 +317,10 @@ INPUT .\report.out
 INPUT .\report.out
 INPUT report.out
 INPUT report.out
-OUTPUT report.pdf
 INPUT .\report.out
 INPUT .\report.out
 OUTPUT report.out
+OUTPUT report.pdf
 INPUT C:\Users\PC\AppData\Local\Programs\MiKTeX\fonts\tfm\vntex\vnr\vnbx12.tfm
 INPUT C:\Users\PC\AppData\Local\Programs\MiKTeX\fonts\tfm\vntex\vnr\vnbx12.tfm
 INPUT .\logo hust.png
@@ -400,6 +400,7 @@ INPUT C:\Users\PC\AppData\Local\Programs\MiKTeX\fonts\tfm\public\amsfonts\symbol
 INPUT C:\Users\PC\AppData\Local\Programs\MiKTeX\fonts\tfm\public\amsfonts\symbols\msbm10.tfm
 INPUT C:\Users\PC\AppData\Local\Programs\MiKTeX\fonts\tfm\public\amsfonts\symbols\msbm7.tfm
 INPUT C:\Users\PC\AppData\Local\Programs\MiKTeX\fonts\tfm\vntex\vnr\vnti12.tfm
+INPUT C:\Users\PC\AppData\Local\Programs\MiKTeX\fonts\tfm\vntex\vnr\vnr8.tfm
 INPUT report.aux
 INPUT .\report.out
 INPUT .\report.out
