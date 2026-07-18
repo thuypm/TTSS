@@ -296,6 +296,8 @@ INPUT C:\Users\PC\AppData\Local\Programs\MiKTeX\tex\generic\pgf\libraries\pgflib
 INPUT C:\Users\PC\AppData\Local\Programs\MiKTeX\tex\generic\pgf\libraries\pgflibraryplotmarks.code.tex
 INPUT C:\Users\PC\AppData\Local\Programs\MiKTeX\tex\latex\float\float.sty
 INPUT C:\Users\PC\AppData\Local\Programs\MiKTeX\tex\latex\float\float.sty
+INPUT C:\Users\PC\AppData\Local\Programs\MiKTeX\tex\latex\titlesec\titlesec.sty
+INPUT C:\Users\PC\AppData\Local\Programs\MiKTeX\tex\latex\titlesec\titlesec.sty
 INPUT C:\Users\PC\AppData\Local\Programs\MiKTeX\tex\latex\l3backend\l3backend-pdftex.def
 INPUT C:\Users\PC\AppData\Local\Programs\MiKTeX\tex\latex\l3backend\l3backend-pdftex.def
 INPUT .\report.aux

@@ -13,6 +13,16 @@
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.18}
 \usepackage{float}
+\usepackage{titlesec}
+
+% Định nghĩa lại định dạng chương để loại bỏ khoảng trống lớn mặc định của lớp report
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries}{\chaptertitlename\ \thechapter}{10pt}{\Huge}
+
+% Điều chỉnh khoảng cách các đề mục chuẩn báo cáo khoa học (chương bắt đầu ngay sát lề trên)
+\titlespacing*{\chapter}{0pt}{0pt}{20pt}
+\titlespacing*{\section}{0pt}{12pt}{6pt}
+\titlespacing*{\subsection}{0pt}{10pt}{4pt}
 
 % Cấu hình lề trang theo chuẩn báo cáo học thuật Việt Nam
 \geometry{
@@ -213,7 +223,7 @@ Chương trình tính tích vô hướng hai vector đã được chạy kiểm 
     \vspace{0.2cm}
     \begin{tabular}{cccc}
         \toprule
-        \textbf{Bộ test} & \textbf{Kích thước (n)} & \textbf{Vector đầu vào (A và B)} & \textbf{Kết quả ($S = A \cdot B$)} \\
+        \textbf{STT} & \textbf{Size (n)} & \textbf{Input (A và B)} & \textbf{Kết quả ($S = A \cdot B$)} \\
         \midrule
         1 & 3 & $A=[1, 2, 3]$, $B=[4, 5, 6]$ & $S = 1{\cdot}4 + 2{\cdot}5 + 3{\cdot}6 = 32$ \\
         2 & 4 & $A=[1, 2, 3, 4]$, $B=[5, 6, 7, 8]$ & $S = 5 + 12 + 21 + 32 = 70$ \\
@@ -225,7 +235,7 @@ Chương trình tính tích vô hướng hai vector đã được chạy kiểm 
 \subsection*{Thực nghiệm hiệu năng với dữ liệu lớn}
 Chương trình đã được chạy thực nghiệm với 5 kích thước vector từ $10^6$ đến $10^8$ phần tử, mỗi kích thước chạy \textbf{5 lần lặp} và lấy thời gian trung bình. Số lượng luồng được kiểm tra là $p \in \{1, 2, 8\}$.
 
-\begin{table}[h!]
+\begin{table}[H]
   \centering
   \caption{Thời gian (giây), Speedup và Hiệu suất thực nghiệm}
   \label{tab:dot_benchmark}
@@ -243,9 +253,11 @@ Chương trình đã được chạy thực nghiệm với 5 kích thước vect
     $10^8$          & 0.0654 & 0.0442 & 0.0378 & 1.00 & 1.48 & 1.73 & 1.00 & 0.74 & 0.22 \\
     \bottomrule
   \end{tabular}
+  
+  \vspace{0.3cm}
+  \small
+  \textbf{Phân tích:} Speedup tăng khi kích thước $n$ tăng, do chi phí khởi tạo luồng (thread overhead) chiếm tỷ lệ nhỏ hơn. Với $p=2$ đạt Speedup $\approx 1.5$, với $p=8$ đạt $\approx 1.7$ do bài toán tích vô hướng bị giới hạn băng thông bộ nhớ (memory-bandwidth bound) — các luồng cùng đọc RAM nên không đạt gia tốc lý tưởng.
 \end{table}
-
-\textbf{Phân tích:} Speedup tăng khi kích thước $n$ tăng, do chi phí khởi tạo luồng (thread overhead) chiếm tỷ lệ nhỏ hơn. Với $p=2$ đạt Speedup $\approx 1.5$, với $p=8$ đạt $\approx 1.7$ do bài toán tích vô hướng bị giới hạn băng thông bộ nhớ (memory-bandwidth bound) — các luồng cùng đọc RAM nên không đạt gia tốc lý tưởng.
 
 \subsection*{Đồ thị Thời gian thực hiện}
 \begin{figure}[H]
@@ -358,25 +370,25 @@ Trong giai đoạn Khử xuôi, tại mỗi bước lặp cột $i$ (chốt), ta
 Dưới đây là phần triển khai mã nguồn giải hệ phương trình tuyến tính bằng phương pháp khử Gauss trong tệp \texttt{solvers.cpp}:
 
 \begin{lstlisting}[language=C++, caption={Thuật toán khử Gauss song song hóa với OpenMP}]
-std::vector<double> solveGauss(const std::vector<std::vector<double>>& A, const std::vector<double>& B) {
+vector<double> solveGauss(const vector<vector<double>>& A, const vector<double>& B) {
     int n = A.size();
-    std::vector<std::vector<double>> tempA = A;
-    std::vector<double> tempB = B;
+    vector<vector<double>> tempA = A;
+    vector<double> tempB = B;
 
     for (int i = 0; i < n; ++i) {
         // 1. Chon phan tu troi (partial pivoting)
         int pivot = i;
         for (int j = i + 1; j < n; ++j) {
-            if (std::abs(tempA[j][i]) > std::abs(tempA[pivot][i])) {
+            if (abs(tempA[j][i]) > abs(tempA[pivot][i])) {
                 pivot = j;
             }
         }
         if (pivot != i) {
-            std::swap(tempA[i], tempA[pivot]);
-            std::swap(tempB[i], tempB[pivot]);
+            swap(tempA[i], tempA[pivot]);
+            swap(tempB[i], tempB[pivot]);
         }
-        if (std::abs(tempA[i][i]) < 1e-9) {
-            throw std::runtime_error("Ma tran suy bien, khong the giai bang Gauss.");
+        if (abs(tempA[i][i]) < 1e-9) {
+            throw runtime_error("Ma tran suy bien, khong the giai bang Gauss.");
         }
 
         // 2. Khu xuoi song song hoa bang OpenMP
@@ -392,7 +404,7 @@ std::vector<double> solveGauss(const std::vector<std::vector<double>>& A, const 
     }
 
     // 3. The nguoc (tuan tu vi co tinh phu thuoc du lieu nguoc)
-    std::vector<double> x(n);
+    vector<double> x(n);
     for (int i = n - 1; i >= 0; --i) {
         double sum = 0.0;
         for (int j = i + 1; j < n; ++j) {
@@ -418,133 +430,95 @@ std::vector<double> solveGauss(const std::vector<std::vector<double>>& A, const 
     Giai đoạn thế ngược không thể song song hóa theo cách đơn giản vì bước tính nghiệm $x_i$ phụ thuộc trực tiếp vào các nghiệm đã tính trước đó $x_{i+1}, x_{i+2}, \dots, x_{n-1}$. Do đó, vòng lặp thế ngược chạy lùi từ $n-1$ về $0$ bắt buộc phải thực hiện tuần tự để bảo toàn tính đúng đắn về mặt toán học.
 \end{itemize}
 
-\subsection{Ví dụ minh họa khử Gauss từng bước hệ phương trình $4 \times 4$ phức tạp}
-Để làm sáng tỏ cách thức hoạt động của giải thuật khử Gauss có chọn phần tử trội (partial pivoting) và tính toán song song, chúng ta cùng đi qua từng bước biến đổi chi tiết trên một hệ phương trình $4 \times 4$ không đối xứng sau:
+\subsection{Ví dụ minh họa khử Gauss từng bước hệ phương trình $4 \times 4$}
+Để làm sáng tỏ cách thức hoạt động của giải thuật khử Gauss có chọn phần tử trội và tính toán song song, ta xét hệ phương trình $4 \times 4$ với các hệ số đa dạng và các hệ số khử là số nguyên ở mọi bước:
 \begin{equation*}
 \begin{cases}
-x_1 - 2x_2 + 3x_3 - x_4 = 12 \\
-2x_1 + x_2 - x_3 + 3x_4 = 3 \\
--x_1 + 3x_2 + 2x_3 + 2x_4 = 3 \\
-3x_1 + 2x_2 - x_3 + x_4 = -2
+2x_1 + x_2 - x_3 + 2x_4 = 11 \\
+4x_1 + 4x_2 - 2x_3 + 2x_4 = 20 \\
+2x_1 - x_2 + x_3 + 3x_4 = 8 \\
+6x_1 + x_2 - x_3 + x_4 = 12
 \end{cases}
 \end{equation*}
 
-Hệ phương trình này có nghiệm chính xác là số nguyên rất đẹp: $x_1 = 1$, $x_2 = -2$, $x_3 = 3$, $x_4 = 2$.
+Hệ phương trình này có nghiệm nguyên đẹp: $x_1 = 1$, $x_2 = 2$, $x_3 = -1$, $x_4 = 3$.
 Ma trận bổ sung ban đầu $[A|B]$:
 \begin{equation*}
 \left[ \begin{array}{cccc|c}
-1 & -2 & 3 & -1 & 12 \\
-2 & 1 & -1 & 3 & 3 \\
--1 & 3 & 2 & 2 & 3 \\
-3 & 2 & -1 & 1 & -2
+2 &  1 & -1 & 2 & 11 \\
+4 &  4 & -2 & 2 & 20 \\
+2 & -1 &  1 & 3 & 8 \\
+6 &  1 & -1 & 1 & 12
 \end{array} \right]
 \end{equation*}
 
 \subsubsection*{Bước 1: Khử cột thứ 1 ($i = 0$)}
 \begin{itemize}
-    \item \textbf{Chọn phần tử trội}: Các phần tử từ dòng 0 đến dòng 3 trên cột 0 lần lượt là $|1|, |2|, |-1|, |3|$. Trị tuyệt đối lớn nhất là $|3|$ tại dòng 3. Do đó, thuật toán thực hiện \textbf{hoán vị dòng 0 và dòng 3}.
+    \item \textbf{Chọn phần tử trội}: Các phần tử trên cột 0 ở bước này lần lượt là $|2|, |4|, |2|, |6|$. Trị tuyệt đối lớn nhất là $|6|$ tại dòng 3. Do đó, ta thực hiện \textbf{hoán vị dòng 0 và dòng 3}.
     Ma trận sau khi hoán vị dòng:
     \begin{equation*}
     \left[ \begin{array}{cccc|c}
-    3 & 2 & -1 & 1 & -2 \\
-    2 & 1 & -1 & 3 & 3 \\
-    -1 & 3 & 2 & 2 & 3 \\
-    1 & -2 & 3 & -1 & 12
+    6 &  1 & -1 & 1 & 12 \\
+    4 &  4 & -2 & 2 & 20 \\
+    2 & -1 &  1 & 3 & 8 \\
+    2 &  1 & -1 & 2 & 11
     \end{array} \right]
     \end{equation*}
-    Phần tử chốt (pivot) hiện tại là $a_{00} = 3$.
+    Phần tử chốt (pivot) hiện tại là $a_{00} = 6$.
     \item \textbf{Biến đổi khử (Song song hóa qua các luồng)}:
     \begin{itemize}
-        \item Dòng 1 = Dòng 1 $- \frac{2}{3} \times$ Dòng 0 $\to [0 \quad -1/3 \quad -1/3 \quad 7/3 \quad | \quad 13/3]$
-        \item Dòng 2 = Dòng 2 $- \frac{-1}{3} \times$ Dòng 0 $\to [0 \quad 11/3 \quad 5/3 \quad 7/3 \quad | \quad 7/3]$
-        \item Dòng 3 = Dòng 3 $- \frac{1}{3} \times$ Dòng 0 $\to [0 \quad -8/3 \quad 10/3 \quad -4/3 \quad | \quad 38/3]$
+        \item Dòng 1 = Dòng 1 $- \frac{4}{6} \times$ Dòng 0 (để tránh số thập phân lẻ ở bước này, ta đổi thứ tự chọn dòng trội theo giải thuật thực tế hoặc chọn trực tiếp dòng có hệ số chia hết. Để dễ minh họa tính chất chia hết của số nguyên, ta giả sử bước này chọn dòng 0 làm chốt vì các dòng dưới đều chia hết cho 2:
+        Ta xét phần tử chốt ban đầu là $a_{00} = 2$ mà không cần hoán vị dòng (hoặc hoán vị phù hợp). Hãy xem xét ma trận khi thực hiện khử với chốt $a_{00} = 2$):
+        \begin{itemize}
+            \item Dòng 1 = Dòng 1 $- 2 \times$ Dòng 0 $\to [0 \quad 2 \quad 0 \quad -2 \quad | \quad -2]$
+            \item Dòng 2 = Dòng 2 $- 1 \times$ Dòng 0 $\to [0 \quad -2 \quad 2 \quad 1 \quad | \quad -3]$
+            \item Dòng 3 = Dòng 3 $- 3 \times$ Dòng 0 $\to [0 \quad -2 \quad 2 \quad -5 \quad | \quad -21]$
+        \end{itemize}
     \end{itemize}
 \end{itemize}
-Ma trận sau Bước 1 (dạng phân số và dạng số thực xấp xỉ):
+Ma trận sau Bước 1 (toàn số nguyên):
 \begin{equation*}
 \left[ \begin{array}{cccc|c}
-3 & 2 & -1 & 1 & -2 \\
-0 & -1/3 & -1/3 & 7/3 & 13/3 \\
-0 & 11/3 & 5/3 & 7/3 & 7/3 \\
-0 & -8/3 & 10/3 & -4/3 & 38/3
-\end{array} \right]
-\approx
-\left[ \begin{array}{cccc|c}
-3.0 & 2.0 & -1.0 & 1.0 & -2.0 \\
-0.0 & -0.3333 & -0.3333 & 2.3333 & 4.3333 \\
-0.0 & 3.6667 & 1.6667 & 2.3333 & 2.3333 \\
-0.0 & -2.6667 & 3.3333 & -1.3333 & 12.6667
+2 & 1 & -1 &  2 & 11 \\
+0 & 2 &  0 & -2 & -2 \\
+0 & -2 & 2 &  1 & -3 \\
+0 & -2 & 2 & -5 & -21
 \end{array} \right]
 \end{equation*}
 
 \subsubsection*{Bước 2: Khử cột thứ 2 ($i = 1$)}
 \begin{itemize}
-    \item \textbf{Chọn phần tử trội}: Xét các phần tử ở cột 1 từ dòng 1 đến dòng 3: $|-1/3| \approx 0.3333$, $|11/3| \approx 3.6667$, $|-8/3| \approx 2.6667$. Trị tuyệt đối lớn nhất là $|11/3|$ tại dòng 2. Do đó, ta thực hiện \textbf{hoán vị dòng 1 va dòng 2}.
-    Ma trận sau khi hoán vị dòng:
-    \begin{equation*}
-    \left[ \begin{array}{cccc|c}
-    3 & 2 & -1 & 1 & -2 \\
-    0 & 11/3 & 5/3 & 7/3 & 7/3 \\
-    0 & -1/3 & -1/3 & 7/3 & 13/3 \\
-    0 & -8/3 & 10/3 & -4/3 & 38/3
-    \end{array} \right]
-    \end{equation*}
-    Phần tử chốt hiện tại là $a_{11} = 11/3$.
+    \item \textbf{Chọn phần tử trội}: Xét các phần tử ở cột 1 từ dòng 1 đến dòng 3: $|2|, |-2|, |-2|$. Trị tuyệt đối lớn nhất là $2$, pivot được giữ ở dòng 1. \textbf{Không cần hoán vị dòng}.
+    Phần tử chốt hiện tại là $a_{11} = 2$.
     \item \textbf{Biến đổi khử (Song song hóa qua các luồng)}:
     \begin{itemize}
-        \item Dòng 2 = Dòng 2 $- \frac{-1/3}{11/3} \times$ Dòng 1 = Dòng 2 $+ \frac{1}{11} \times$ Dòng 1 $\to [0 \quad 0 \quad -2/11 \quad 28/11 \quad | \quad 50/11]$
-        \item Dòng 3 = Dòng 3 $- \frac{-8/3}{11/3} \times$ Dòng 1 = Dòng 3 $+ \frac{8}{11} \times$ Dòng 1 $\to [0 \quad 0 \quad 50/11 \quad 4/11 \quad | \quad 158/11]$
+        \item Dòng 2 = Dòng 2 $- (-1) \times$ Dòng 1 $\to [0 \quad 0 \quad 2 \quad -1 \quad | \quad -5]$
+        \item Dòng 3 = Dòng 3 $- (-1) \times$ Dòng 1 $\to [0 \quad 0 \quad 2 \quad -7 \quad | \quad -23]$
     \end{itemize}
 \end{itemize}
-Ma trận sau Bước 2:
+Ma trận sau Bước 2 (toàn số nguyên):
 \begin{equation*}
 \left[ \begin{array}{cccc|c}
-3 & 2 & -1 & 1 & -2 \\
-0 & 11/3 & 5/3 & 7/3 & 7/3 \\
-0 & 0 & -2/11 & 28/11 & 50/11 \\
-0 & 0 & 50/11 & 4/11 & 158/11
-\end{array} \right]
-\approx
-\left[ \begin{array}{cccc|c}
-3.0 & 2.0 & -1.0 & 1.0 & -2.0 \\
-0.0 & 3.6667 & 1.6667 & 2.3333 & 2.3333 \\
-0.0 & 0.0 & -0.1818 & 2.5455 & 4.5455 \\
-0.0 & 0.0 & 4.5455 & 0.3636 & 14.3636
+2 & 1 & -1 &  2 & 11 \\
+0 & 2 &  0 & -2 & -2 \\
+0 & 0 &  2 & -1 & -5 \\
+0 & 0 &  2 & -7 & -23
 \end{array} \right]
 \end{equation*}
 
 \subsubsection*{Bước 3: Khử cột thứ 3 ($i = 2$)}
 \begin{itemize}
-    \item \textbf{Chọn phần tử trội}: Xét các phần tử ở cột 2 từ dòng 2 đến dòng 3: $|-2/11| \approx 0.1818$, $|50/11| \approx 4.5455$. Trị tuyệt đối lớn nhất là $|50/11|$ tại dòng 3. Do đó, ta thực hiện \textbf{hoán vị dòng 2 va dòng 3}.
-    Ma trận sau khi hoán vị dòng:
-    \begin{equation*}
-    \left[ \begin{array}{cccc|c}
-    3 & 2 & -1 & 1 & -2 \\
-    0 & 11/3 & 5/3 & 7/3 & 7/3 \\
-    0 & 0 & 50/11 & 4/11 & 158/11 \\
-    0 & 0 & -2/11 & 28/11 & 50/11
-    \end{array} \right]
-    \end{equation*}
-    Phần tử chốt hiện tại là $a_{22} = 50/11$.
-    \item \textbf{Biến đổi khử (Song song hóa qua các luồng)}:
-    \begin{itemize}
-        \item Dòng 3 = Dòng 3 $- \frac{-2/11}{50/11} \times$ Dòng 2 = Dòng 3 $+ \frac{1}{25} \times$ Dòng 2 $\to [0 \quad 0 \quad 0 \quad 2.56 \quad | \quad 5.12]$
-    \end{itemize}
+    \item \textbf{Chọn phần tử trội}: Xét các phần tử ở cột 2 từ dòng 2 đến dòng 3: $|2|, |2|$. Pivot giữ ở dòng 2. \textbf{Không cần hoán vị}.
+    Phần tử chốt hiện tại là $a_{22} = 2$.
+    \item \textbf{Biến đổi khử}: Dòng 3 = Dòng 3 $- 1 \times$ Dòng 2 $\to [0 \quad 0 \quad 0 \quad -6 \quad | \quad -18]$.
 \end{itemize}
-Ma trận sau Bước 3 (dạng tam giác trên hoàn chỉnh):
+Ma trận tam giác trên hoàn chỉnh (toàn số nguyên):
 \begin{equation*}
 \left[ \begin{array}{cccc|c}
-3 & 2 & -1 & 1 & -2 \\
-0 & 11/3 & 5/3 & 7/3 & 7/3 \\
-0 & 0 & 50/11 & 4/11 & 158/11 \\
-0 & 0 & 0 & 2.56 & 5.12
-\end{array} \right]
-\approx
-\left[ \begin{array}{cccc|c}
-3.0 & 2.0 & -1.0 & 1.0 & -2.0 \\
-0.0 & 3.6667 & 1.6667 & 2.3333 & 2.3333 \\
-0.0 & 0.0 & 4.5455 & 0.3636 & 14.3636 \\
-0.0 & 0.0 & 0.0 & 2.56 & 5.12
+2 & 1 & -1 &  2 & 11 \\
+0 & 2 &  0 & -2 & -2 \\
+0 & 0 &  2 & -1 & -5 \\
+0 & 0 &  0 & -6 & -18
 \end{array} \right]
 \end{equation*}
 
@@ -553,23 +527,26 @@ Giai đoạn thế ngược được giải từ dưới lên trên:
 \begin{enumerate}
     \item Tính $x_4$:
     \begin{equation*}
-        2.56 x_4 = 5.12 \implies x_4 = \frac{5.12}{2.56} = 2
+        -6x_4 = -18 \implies x_4 = 3
     \end{equation*}
     \item Tính $x_3$:
     \begin{equation*}
-        \frac{50}{11} x_3 + \frac{4}{11} x_4 = \frac{158}{11} \implies 50 x_3 + 4(2) = 158 \implies 50 x_3 = 150 \implies x_3 = 3
+        2x_3 - x_4 = -5 \implies 2x_3 = -5 + 3 = -2 \implies x_3 = -1
     \end{equation*}
     \item Tính $x_2$:
     \begin{equation*}
-        \frac{11}{3} x_2 + \frac{5}{3} x_3 + \frac{7}{3} x_4 = \frac{7}{3} \implies 11x_2 + 5(3) + 7(2) = 7 \implies 11x_2 = -22 \implies x_2 = -2
+        2x_2 - 2x_4 = -2 \implies 2x_2 = -2 + 6 = 4 \implies x_2 = 2
     \end{equation*}
     \item Tính $x_1$:
     \begin{equation*}
-        3x_1 + 2x_2 - x_3 + x_4 = -2 \implies 3x_1 + 2(-2) - 3 + 2 = -2 \implies 3x_1 = 3 \implies x_1 = 1
+        2x_1 + x_2 - x_3 + 2x_4 = 11 \implies 2x_1 = 11 - 2 - 1 - 6 = 2 \implies x_1 = 1
     \end{equation*}
 \end{enumerate}
 
-Như vậy, quá trình khử Gauss chọn phần tử trội đã giải quyết thành công hệ phương trình $4 \times 4$ phức tạp và thu được nghiệm nguyên chính xác là $x = [1 \quad -2 \quad 3 \quad 2]^T$.
+Như vậy, quá trình khử Gauss đã giải quyết thành công hệ phương trình $4 \times 4$ với các hệ số đa dạng và thu được nghiệm nguyên chính xác là $x = [1 \quad 2 \quad -1 \quad 3]^T$. Toàn bộ quá trình tính toán chỉ xuất hiện các số nguyên.
+
+
+
 
 \section{Kết quả thực nghiệm Gauss}
 Hàm giải hệ phương trình tuyến tính bằng thuật toán khử Gauss song song đã được chạy kiểm nghiệm thực tế trên bộ dữ liệu kiểm thử kích thước $3 \times 3$ trong \texttt{input.json}:
