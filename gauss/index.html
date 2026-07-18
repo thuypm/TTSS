@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gauss OpenMP Benchmark Dashboard</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: rgba(20, 28, 48, 0.6);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --accent-primary: #3b82f6;
+            --accent-secondary: #10b981;
+            --accent-tertiary: #a855f7;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --glow-color: rgba(59, 130, 246, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 2rem;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.1) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(168, 85, 247, 0.1) 0px, transparent 50%);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header styles */
+        header {
+            margin-bottom: 2.5rem;
+            text-align: center;
+            position: relative;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #3b82f6, #60a5fa, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.5px;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            font-weight: 400;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, border-color 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--accent-primary);
+        }
+
+        .stat-card:nth-child(2)::before { background: var(--accent-secondary); }
+        .stat-card:nth-child(3)::before { background: var(--accent-tertiary); }
+        .stat-card:nth-child(4)::before { background: #f59e0b; }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .stat-desc {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        /* Main Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            margin-bottom: 2.5rem;
+        }
+
+        @media (max-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .chart-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 2rem;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .chart-card.full-width {
+            grid-column: span 2;
+        }
+
+        @media (max-width: 1024px) {
+            .chart-card.full-width {
+                grid-column: span 1;
+            }
+        }
+
+        .chart-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .chart-title span {
+            background: linear-gradient(to right, #3b82f6, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 380px;
+            width: 100%;
+        }
+
+        /* Table section */
+        .table-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 2rem;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        th {
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            font-size: 1rem;
+            color: #e5e7eb;
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .badge-blue { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+        .badge-green { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+
+        .error-message {
+            color: #ef4444;
+            text-align: center;
+            font-size: 1.2rem;
+            padding: 3rem;
+            background: rgba(239, 68, 68, 0.1);
+            border-radius: 12px;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            margin: 2rem 0;
+        }
+
+        .loader {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 300px;
+            flex-direction: column;
+            gap: 1rem;
+            color: var(--text-muted);
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.1);
+            border-top-color: var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 id="main-title">Gauss OpenMP Benchmark</h1>
+            <p>Báo cáo thời gian thực thi, Speedup và Hiệu suất song song trên CPU Intel/AMD nhiều nhân</p>
+        </header>
+
+        <div id="loading" class="loader">
+            <div class="spinner"></div>
+            <p>Đang tải dữ liệu kết quả đo lường...</p>
+        </div>
+
+        <div id="error-container" style="display: none;">
+            <div class="error-message">
+                <h3>Không thể tải file dữ liệu data.json</h3>
+                <p style="margin-top: 0.5rem; font-size: 0.95rem; color: var(--text-muted);">
+                    Lưu ý: Nếu bạn mở file HTML trực tiếp bằng giao thức file://, trình duyệt có thể chặn tải file nội bộ do chính sách bảo mật (CORS). 
+                    Vui lòng chạy một HTTP server cục bộ hoặc tham khảo dữ liệu trong file benchmark_report.md.
+                </p>
+            </div>
+        </div>
+
+        <div id="dashboard" style="display: none;">
+            <!-- Stats Row -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Cấu hình CPU tối đa</div>
+                    <div class="stat-value" id="stat-max-threads">12 Luồng</div>
+                    <div class="stat-desc">Số lượng CPU logic đo đạc</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Kích thước tối đa</div>
+                    <div class="stat-value" id="stat-max-n">1.600</div>
+                    <div class="stat-desc">Kích thước ma trận vuông n x n</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Speedup Lớn Nhất</div>
+                    <div class="stat-value" id="stat-max-speedup">0.00x</div>
+                    <div class="stat-desc" id="stat-max-speedup-desc">Tại n = 1.600</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Hiệu suất Đỉnh</div>
+                    <div class="stat-value" id="stat-max-eff">0.00%</div>
+                    <div class="stat-desc" id="stat-max-eff-desc">Hiệu quả khai thác luồng</div>
+                </div>
+            </div>
+
+            <!-- Charts Grid -->
+            <div class="dashboard-grid">
+                <!-- Execution Time Chart -->
+                <div class="chart-card full-width">
+                    <div class="chart-title">
+                        <span>Thời gian thực thi (giây)</span>
+                        <small style="color: var(--text-muted); font-weight: normal; font-size: 0.85rem;">Thời gian càng thấp càng tốt</small>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="timeChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Speedup Chart -->
+                <div class="chart-card">
+                    <div class="chart-title">
+                        <span>Độ tăng tốc Speedup S(p)</span>
+                        <small style="color: var(--text-muted); font-weight: normal; font-size: 0.85rem;">S(p) = T(1) / T(p)</small>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="speedupChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Efficiency Chart -->
+                <div class="chart-card">
+                    <div class="chart-title">
+                        <span>Hiệu suất song song E(p)</span>
+                        <small style="color: var(--text-muted); font-weight: normal; font-size: 0.85rem;">E(p) = S(p) / p</small>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="efficiencyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Optimization Comparison Card -->
+            <div class="chart-card full-width" id="opt-card" style="margin-bottom: 2.5rem; display: none;">
+                <div class="chart-title">
+                    <span style="background: linear-gradient(to right, #f59e0b, #10b981); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">So sánh Tối ưu hóa (Mẫu N = 5.000)</span>
+                    <small style="color: var(--text-muted); font-weight: normal; font-size: 0.85rem;">Bản gốc vs Bản tối ưu (Mảng 1D phẳng + Single Parallel)</small>
+                </div>
+                <div class="chart-container" style="height: 320px;">
+                    <canvas id="optChart"></canvas>
+                </div>
+                <div class="stats-grid" style="margin-top: 1.5rem; margin-bottom: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;">
+                    <div class="stat-card" style="padding: 1rem; border-radius: 12px; background: rgba(59, 130, 246, 0.05); text-align: center; border: 1px solid rgba(255, 255, 255, 0.05);">
+                        <div class="stat-label" style="font-size: 0.75rem; letter-spacing: 0.5px; margin-bottom: 0.25rem;">Cải thiện (1 Luồng)</div>
+                        <div class="stat-value" id="opt-speedup-1" style="font-size: 1.5rem; color: #60a5fa; font-weight: 700;">-</div>
+                    </div>
+                    <div class="stat-card" style="padding: 1rem; border-radius: 12px; background: rgba(168, 85, 247, 0.05); text-align: center; border: 1px solid rgba(255, 255, 255, 0.05);">
+                        <div class="stat-label" style="font-size: 0.75rem; letter-spacing: 0.5px; margin-bottom: 0.25rem;">Cải thiện (2 Luồng)</div>
+                        <div class="stat-value" id="opt-speedup-2" style="font-size: 1.5rem; color: #a855f7; font-weight: 700;">-</div>
+                    </div>
+                    <div class="stat-card" style="padding: 1rem; border-radius: 12px; background: rgba(245, 158, 11, 0.05); text-align: center; border: 1px solid rgba(255, 255, 255, 0.05);">
+                        <div class="stat-label" style="font-size: 0.75rem; letter-spacing: 0.5px; margin-bottom: 0.25rem;">Cải thiện (8 Luồng)</div>
+                        <div class="stat-value" id="opt-speedup-8" style="font-size: 1.5rem; color: #f59e0b; font-weight: 700;">-</div>
+                    </div>
+                    <div class="stat-card" style="padding: 1rem; border-radius: 12px; background: rgba(16, 185, 129, 0.05); text-align: center; border: 1px solid rgba(255, 255, 255, 0.05);">
+                        <div class="stat-label" style="font-size: 0.75rem; letter-spacing: 0.5px; margin-bottom: 0.25rem;">Cải thiện (12 Luồng)</div>
+                        <div class="stat-value" id="opt-speedup-12" style="font-size: 1.5rem; color: #10b981; font-weight: 700;">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table Card -->
+            <div class="table-card">
+                <div class="chart-title" style="margin-bottom: 1rem;">
+                    <span>Bảng Số Liệu Chi Tiết</span>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Kích cỡ N</th>
+                            <th>T(1) (Seq)</th>
+                            <th>T(2) (2 Cores)</th>
+                            <th>T(8) (8 Cores)</th>
+                            <th>T(12) (Max Cores)</th>
+                            <th>S(2) / S(8) / S(12)</th>
+                            <th>E(2) / E(8) / E(12)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="data-table-body">
+                        <!-- Filled by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Cấu hình chung cho Chart
+        Chart.defaults.color = '#9ca3af';
+        Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.05)';
+        Chart.defaults.font.family = "'Outfit', sans-serif";
+
+        fetch('data.json')
+            .then(response => {
+                if (!response.ok) throw new Error("Không thể tải file");
+                return response.json();
+            })
+            .then(data => {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+
+                const results = data.results;
+                const ns = results.map(r => r.n);
+                
+                // Trích xuất số luồng thử nghiệm
+                const threadKeys = Object.keys(results[0].times).map(Number).sort((a, b) => a - b);
+                const maxThreads = Math.max(...threadKeys);
+                document.getElementById('stat-max-threads').innerText = maxThreads + " Luồng";
+                document.getElementById('stat-max-n').innerText = Math.max(...ns).toLocaleString('vi-VN');
+
+                // Màu sắc tương ứng các thread
+                const colors = {
+                    1: '#60a5fa', // Blue
+                    2: '#a855f7', // Purple
+                    8: '#f59e0b', // Amber
+                    12: '#10b981' // Green
+                };
+
+                // 1. Vẽ biểu đồ Thời gian thực thi
+                const timeDatasets = threadKeys.map(t => {
+                    return {
+                        label: t === 1 ? 'Tuần tự (1 Luồng)' : `${t} Luồng (Song song)`,
+                        data: results.map(r => r.times[t]),
+                        borderColor: colors[t] || '#ffffff',
+                        backgroundColor: (colors[t] || '#ffffff') + '1a',
+                        borderWidth: 3,
+                        tension: 0.15,
+                        fill: false
+                    };
+                });
+
+                new Chart(document.getElementById('timeChart'), {
+                    type: 'line',
+                    data: { labels: ns, datasets: timeDatasets },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'top' },
+                            tooltip: { padding: 12, cornerRadius: 8 }
+                        },
+                        scales: {
+                            x: { title: { display: true, text: 'Kích thước ma trận (N x N)' } },
+                            y: { title: { display: true, text: 'Thời gian chạy (Giây)' }, min: 0 }
+                        }
+                    }
+                });
+
+                // Tính toán Speedup và Efficiency
+                let maxSpeedup = 0;
+                let maxSpeedupN = 0;
+                let maxEff = 0;
+                let maxEffN = 0;
+                let maxEffT = 2;
+
+                const speedupDatasets = threadKeys.filter(t => t > 1).map(t => {
+                    const sData = results.map(r => {
+                        const t1 = r.times["1"];
+                        const tp = r.times[t];
+                        const sp = t1 / tp;
+                        if (sp > maxSpeedup) {
+                            maxSpeedup = sp;
+                            maxSpeedupN = r.n;
+                        }
+                        return sp;
+                    });
+
+                    return {
+                        label: `S(${t}) - Thực tế`,
+                        data: sData,
+                        borderColor: colors[t],
+                        borderWidth: 3,
+                        tension: 0.15,
+                        fill: false
+                    };
+                });
+
+                // Thêm các đường lý thuyết lý tưởng vào Speedup Chart
+                threadKeys.filter(t => t > 1).forEach(t => {
+                    speedupDatasets.push({
+                        label: `S(${t}) - Lý tưởng (${t}x)`,
+                        data: ns.map(() => t),
+                        borderDash: [5, 5],
+                        borderColor: colors[t] + '80',
+                        borderWidth: 1.5,
+                        pointStyle: 'none',
+                        pointRadius: 0,
+                        fill: false
+                    });
+                });
+
+                new Chart(document.getElementById('speedupChart'), {
+                    type: 'line',
+                    data: { labels: ns, datasets: speedupDatasets },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'top' },
+                            tooltip: { padding: 12, cornerRadius: 8 }
+                        },
+                        scales: {
+                            x: { title: { display: true, text: 'Kích thước ma trận (N x N)' } },
+                            y: { title: { display: true, text: 'Speedup S(p)' }, min: 0 }
+                        }
+                    }
+                });
+
+                // 3. Biểu đồ Hiệu suất song song
+                const efficiencyDatasets = threadKeys.filter(t => t > 1).map(t => {
+                    const eData = results.map(r => {
+                        const t1 = r.times["1"];
+                        const tp = r.times[t];
+                        const sp = t1 / tp;
+                        const ep = sp / t;
+                        if (ep > maxEff) {
+                            maxEff = ep;
+                            maxEffN = r.n;
+                            maxEffT = t;
+                        }
+                        return ep;
+                    });
+
+                    return {
+                        label: `E(${t}) - Thực tế`,
+                        data: eData,
+                        borderColor: colors[t],
+                        borderWidth: 3,
+                        tension: 0.15,
+                        fill: false
+                    };
+                });
+
+                // Đường lý tưởng = 1.0 (100% hiệu suất)
+                efficiencyDatasets.push({
+                    label: 'Lý tưởng (100%)',
+                    data: ns.map(() => 1.0),
+                    borderDash: [5, 5],
+                    borderColor: '#ffffff50',
+                    borderWidth: 1.5,
+                    pointStyle: 'none',
+                    pointRadius: 0,
+                    fill: false
+                });
+
+                new Chart(document.getElementById('efficiencyChart'), {
+                    type: 'line',
+                    data: { labels: ns, datasets: efficiencyDatasets },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'top' },
+                            tooltip: { padding: 12, cornerRadius: 8 }
+                        },
+                        scales: {
+                            x: { title: { display: true, text: 'Kích thước ma trận (N x N)' } },
+                            y: { title: { display: true, text: 'Hiệu suất E(p)' }, min: 0, max: 1.2 }
+                        }
+                    }
+                });
+
+                // Cập nhật thẻ thống kê đầu trang
+                document.getElementById('stat-max-speedup').innerText = maxSpeedup.toFixed(2) + "x";
+                document.getElementById('stat-max-speedup-desc').innerText = `Tại n = ${maxSpeedupN.toLocaleString('vi-VN')}`;
+                document.getElementById('stat-max-eff').innerText = (maxEff * 100).toFixed(1) + "%";
+                document.getElementById('stat-max-eff-desc').innerText = `Tại n = ${maxEffN.toLocaleString('vi-VN')} (${maxEffT} Luồng)`;
+
+                // 4. Tạo bảng số liệu
+                const tbody = document.getElementById('data-table-body');
+                results.forEach(r => {
+                    const tr = document.createElement('tr');
+                    const t1 = r.times["1"];
+                    const t2 = r.times["2"];
+                    const t8 = r.times["8"];
+                    const tMax = r.times[maxThreads];
+
+                    const s2 = t1 / t2;
+                    const s8 = t1 / t8;
+                    const sMax = t1 / tMax;
+
+                    const e2 = s2 / 2;
+                    const e8 = s8 / 8;
+                    const eMax = sMax / maxThreads;
+
+                    tr.innerHTML = `
+                        <td style="font-weight: 600;">n = ${r.n}</td>
+                        <td>${t1.toFixed(4)}s</td>
+                        <td>${t2.toFixed(4)}s</td>
+                        <td>${t8.toFixed(4)}s</td>
+                        <td>${tMax.toFixed(4)}s</td>
+                        <td>
+                            <span class="badge badge-blue">S(2)=${s2.toFixed(2)}</span>
+                            <span class="badge badge-blue">S(8)=${s8.toFixed(2)}</span>
+                            <span class="badge badge-blue">S(${maxThreads})=${sMax.toFixed(2)}</span>
+                        </td>
+                        <td>
+                            <span class="badge badge-green">${(e2*100).toFixed(0)}%</span>
+                            <span class="badge badge-green">${(e8*100).toFixed(0)}%</span>
+                            <span class="badge badge-green">${(eMax*100).toFixed(0)}%</span>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+                // Tải dữ liệu so sánh tối ưu hóa
+                fetch('opt_data.json')
+                    .then(res => {
+                        if (!res.ok) throw new Error("Không tìm thấy file so sánh");
+                        return res.json();
+                    })
+                    .then(optData => {
+                        document.getElementById('opt-card').style.display = 'block';
+                        
+                        const threads = optData.threads;
+                        for (let i = 0; i < threads.length; i++) {
+                            const t = threads[i];
+                            const ratio = optData.original[i] / optData.optimized[i];
+                            const percent = ((ratio - 1) * 100).toFixed(1);
+                            const sign = percent >= 0 ? '+' : '';
+                            document.getElementById(`opt-speedup-${t}`).innerText = `${sign}${percent}%`;
+                        }
+
+                        new Chart(document.getElementById('optChart'), {
+                            type: 'bar',
+                            data: {
+                                labels: threads.map(t => `${t} Luồng`),
+                                datasets: [
+                                    {
+                                        label: 'Bản gốc (Original - vector<vector>)',
+                                        data: optData.original,
+                                        backgroundColor: 'rgba(239, 68, 68, 0.6)',
+                                        borderColor: '#ef4444',
+                                        borderWidth: 1.5
+                                    },
+                                    {
+                                        label: 'Bản tối ưu (1D Array + Single Parallel)',
+                                        data: optData.optimized,
+                                        backgroundColor: 'rgba(16, 185, 129, 0.6)',
+                                        borderColor: '#10b981',
+                                        borderWidth: 1.5
+                                    }
+                                ]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: { position: 'top', labels: { color: '#f3f4f6' } }
+                                },
+                                scales: {
+                                    x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#9ca3af' } },
+                                    y: {
+                                        title: { display: true, text: 'Thời gian chạy (Giây)', color: '#f3f4f6' },
+                                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                                        ticks: { color: '#9ca3af' },
+                                        beginAtZero: true
+                                    }
+                                }
+                            }
+                        });
+                    })
+                    .catch(err => {
+                        console.log("Không tải được dữ liệu tối ưu hóa:", err);
+                    });
+            })
+            .catch(error => {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error-container').style.display = 'block';
+                console.error(error);
+            });
+    </script>
+</body>
+</html>

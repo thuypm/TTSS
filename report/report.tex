@@ -96,13 +96,9 @@
         
         \vspace{1.5cm}
         
-        % Khung vẽ nghệ thuật nhỏ đại diện cho Logo
         \begin{figure}[h!]
             \centering
-            \setlength{\unitlength}{1mm}
-            \begin{picture}(30,30)
-                \put(0,0){\framebox(30,30)[c]{\textbf{\large HUST}}}
-            \end{picture}
+            \includegraphics[width=3cm]{logo hust.png}
         \end{figure}
         
         \vspace{1.5cm}
@@ -117,7 +113,7 @@
             \centering
             \begin{tabular}{ll}
                 \textbf{Giảng viên hướng dẫn:} & TS Nguyễn Thành Nam \\
-                \textbf{Nhóm sinh viên thực hiện:} & Phạm Minh Thùy - MSHV: 20261051M \\
+                \textbf{Nhóm học viên thực hiện:} & Phạm Minh Thùy - MSHV: 20261051M \\
                 & Trần Thị Khánh Huyền - MSHV: 20252875M \\
             \end{tabular}
         \end{table}
@@ -548,8 +544,12 @@ Như vậy, quá trình khử Gauss đã giải quyết thành công hệ phươ
 
 
 
-\section{Kết quả thực nghiệm Gauss}
-Hàm giải hệ phương trình tuyến tính bằng thuật toán khử Gauss song song đã được chạy kiểm nghiệm thực tế trên bộ dữ liệu kiểm thử kích thước $3 \times 3$ trong \texttt{input.json}:
+\section{Kết quả thực nghiệm và đánh giá hiệu năng Gauss}
+
+Để đánh giá thuật toán khử Gauss song song, chúng tôi thực hiện theo hai giai đoạn: kiểm chứng tính đúng đắn trên ma trận nhỏ và đo đạc hiệu năng (thời gian, Speedup, Efficiency) trên các ma trận kích thước lớn với số luồng thay đổi.
+
+\subsection{Kiểm chứng tính đúng đắn}
+Hàm giải hệ phương trình tuyến tính bằng thuật toán khử Gauss song song đã được chạy kiểm nghiệm thực tế trên bộ dữ liệu kiểm thử kích thước $3 \times 3$ trong tệp \texttt{input.json}:
 \begin{itemize}
     \item \textbf{Đầu vào}:
     \[
@@ -567,9 +567,195 @@ Hàm giải hệ phương trình tuyến tính bằng thuật toán khử Gauss 
         \item Kết quả nghiệm tìm được: $x = [3, 1, 2]$.
         \item Nghiệm kỳ vọng mong đợi: $x_{exp} = [3, 1, 2]$.
         \item Sai số tối đa thu được so với nghiệm chuẩn: $4.44089 \times 10^{-16}$.
-        \item Trạng thái: \textbf{PASSED} (Đạt chuẩn chính xác cao).
     \end{itemize}
 \end{itemize}
+
+\subsection{Thực nghiệm hiệu năng với dữ liệu lớn}
+Chương trình đã được chạy thực nghiệm với 8 kích thước hệ phương trình từ $N=100$ đến $N=5000$, mỗi kích thước chạy \textbf{5 lần lặp} và lấy thời gian trung bình. Số lượng luồng được kiểm tra là $p \in \{1, 2, 8, 12\}$.
+
+\begin{table}[H]
+  \centering
+  \caption{Thời gian (giây), Speedup và Hiệu suất thực nghiệm khử Gauss}
+  \label{tab:gauss_benchmark}
+  \vspace{0.2cm}
+  \small
+  \begin{tabular}{r|rrrr|rrr|rrr}
+    \toprule
+    \textbf{N} & \multicolumn{4}{c|}{\textbf{Thời gian (s)}} & \multicolumn{3}{c|}{\textbf{Speedup $S(p)$}} & \multicolumn{3}{c}{\textbf{Hiệu suất $E(p)$}} \\
+               & $p$=1 & $p$=2 & $p$=8 & $p$=12 & $S(2)$ & $S(8)$ & $S(12)$ & $E(2)$ & $E(8)$ & $E(12)$ \\
+    \midrule
+    100 & 0.0010 & 0.0038 & 0.0066 & 0.0086 & 0.26 & 0.15 & 0.12 & 0.13 & 0.02 & 0.01 \\
+    200 & 0.0022 & 0.0080 & 0.0144 & 0.0186 & 0.28 & 0.15 & 0.12 & 0.14 & 0.02 & 0.01 \\
+    400 & 0.0082 & 0.0186 & 0.0320 & 0.0396 & 0.44 & 0.26 & 0.21 & 0.22 & 0.03 & 0.02 \\
+    800 & 0.0638 & 0.0616 & 0.0726 & 0.0880 & 1.03 & 0.88 & 0.73 & 0.52 & 0.11 & 0.06 \\
+    1000 & 0.1182 & 0.0972 & 0.0996 & 0.1156 & 1.22 & 1.19 & 1.02 & 0.61 & 0.15 & 0.09 \\
+    1600 & 0.5586 & 0.3396 & 0.2302 & 0.2434 & 1.64 & 2.43 & 2.29 & 0.82 & 0.30 & 0.19 \\
+    3000 & 5.0388 & 3.6472 & 2.8190 & 2.4992 & 1.38 & 1.79 & 2.02 & 0.69 & 0.22 & 0.17 \\
+    5000 & 20.2712 & 17.2466 & 16.2510 & 15.7060 & 1.18 & 1.25 & 1.29 & 0.59 & 0.16 & 0.11 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Biểu đồ kết quả đo lường hiệu năng}
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  title={Thời gian thực hiện theo kích thước ma trận},
+  xlabel={Kích thước ma trận $N$},
+  ylabel={Thời gian (giây)},
+  xtick={1,2,3,4,5,6,7,8},
+  xticklabels={100, 200, 400, 800, 1000, 1600, 3000, 5000},
+  ymode=log,
+  log basis y=10,
+  legend pos=north west,
+  ymajorgrids=true,
+  grid style=dashed,
+  width=0.85\textwidth,
+  height=6.5cm,
+]
+\addplot+[mark=circle*,thick,black] coordinates {(1,0.0010) (2,0.0022) (3,0.0082) (4,0.0638) (5,0.1182) (6,0.5586) (7,5.0388) (8,20.2712)};
+\addlegendentry{Tuần tự ($p=1$)}
+\addplot+[mark=square*,thick,blue] coordinates {(1,0.0038) (2,0.0080) (3,0.0186) (4,0.0618) (5,0.0972) (6,0.3396) (7,3.6472) (8,17.2466)};
+\addlegendentry{Song song $p=2$}
+\addplot+[mark=triangle*,thick,red] coordinates {(1,0.0066) (2,0.0144) (3,0.0320) (4,0.0726) (5,0.0996) (6,0.2302) (7,2.8190) (8,16.2510)};
+\addlegendentry{Song song $p=8$}
+\addplot+[mark=diamond*,thick,green!70!black] coordinates {(1,0.0086) (2,0.0186) (3,0.0396) (4,0.0880) (5,0.1156) (6,0.2434) (7,2.4992) (8,15.7060)};
+\addlegendentry{Song song $p=12$}
+\end{axis}
+\end{tikzpicture}
+\caption{Thời gian thực hiện (thang log) của thuật toán khử Gauss}
+\label{fig:gauss_timing}
+\end{figure}
+
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  title={Speedup theo kích thước ma trận},
+  xlabel={Kích thước ma trận $N$},
+  ylabel={Speedup $S(p) = T_1 / T_p$},
+  xtick={1,2,3,4,5,6,7,8},
+  xticklabels={100, 200, 400, 800, 1000, 1600, 3000, 5000},
+  legend pos=north west,
+  ymajorgrids=true,
+  grid style=dashed,
+  width=0.85\textwidth,
+  height=6.5cm,
+  ymin=0,
+]
+\addplot+[mark=square*,thick,blue] coordinates {(1,0.26) (2,0.28) (3,0.44) (4,1.03) (5,1.22) (6,1.64) (7,1.38) (8,1.18)};
+\addlegendentry{$p=2$ luồng}
+\addplot+[mark=triangle*,thick,red] coordinates {(1,0.15) (2,0.15) (3,0.26) (4,0.88) (5,1.19) (6,2.43) (7,1.79) (8,1.25)};
+\addlegendentry{$p=8$ luồng}
+\addplot+[mark=diamond*,thick,green!70!black] coordinates {(1,0.12) (2,0.12) (3,0.21) (4,0.73) (5,1.02) (6,2.29) (7,2.02) (8,1.29)};
+\addlegendentry{$p=12$ luồng}
+\addplot+[dashed,mark=none,blue!50] coordinates {(1,2) (8,2)};
+\addlegendentry{Lý tưởng $p=2$}
+\addplot+[dashed,mark=none,red!50] coordinates {(1,8) (8,8)};
+\addlegendentry{Lý tưởng $p=8$}
+\addplot+[dashed,mark=none,green!50] coordinates {(1,12) (8,12)};
+\addlegendentry{Lý tưởng $p=12$}
+\end{axis}
+\end{tikzpicture}
+\caption{Speedup thực tế so với lý tưởng theo kích thước ma trận}
+\label{fig:gauss_speedup}
+\end{figure}
+
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  title={Hiệu suất song song},
+  xlabel={Kích thước ma trận $N$},
+  ylabel={Hiệu suất $E(p) = S(p)/p$},
+  xtick={1,2,3,4,5,6,7,8},
+  xticklabels={100, 200, 400, 800, 1000, 1600, 3000, 5000},
+  ymin=0, ymax=1.2,
+  legend pos=north west,
+  ymajorgrids=true,
+  grid style=dashed,
+  width=0.85\textwidth,
+  height=6.5cm,
+]
+\addplot+[mark=square*,thick,blue] coordinates {(1,0.13) (2,0.14) (3,0.22) (4,0.52) (5,0.61) (6,0.82) (7,0.69) (8,0.59)};
+\addlegendentry{$p=2$ luồng}
+\addplot+[mark=triangle*,thick,red] coordinates {(1,0.02) (2,0.02) (3,0.03) (4,0.11) (5,0.15) (6,0.30) (7,0.22) (8,0.16)};
+\addlegendentry{$p=8$ luồng}
+\addplot+[mark=diamond*,thick,green!70!black] coordinates {(1,0.01) (2,0.01) (3,0.02) (4,0.06) (5,0.09) (6,0.19) (7,0.17) (8,0.11)};
+\addlegendentry{$p=12$ luồng}
+\addplot+[dashed,mark=none,black,thick] coordinates {(1,1.0) (8,1.0)};
+\addlegendentry{Lý tưởng ($E=1$)}
+\end{axis}
+\end{tikzpicture}
+\caption{Hiệu suất song song của thuật toán khử Gauss}
+\label{fig:gauss_efficiency}
+\end{figure}
+
+\subsection{Phân tích và giải thích hiện tượng hiệu năng}
+
+Dựa vào kết quả bảng số liệu và biểu đồ thu được, chúng tôi đưa ra các phân tích lý thuyết giải thích các hiện tượng thực nghiệm sau:
+
+\subsubsection{1. Tại sao tuần tự chạy nhanh hơn song song ở kích thước nhỏ ($N \le 400$)}
+Khi kích thước ma trận $N$ nhỏ, thời gian chạy tuần tự vô cùng ngắn (chỉ mất $1.0 - 8.2$ mili-giây). Ở kích thước này, phiên bản song song chạy chậm hơn tuần tự rất nhiều vì:
+\begin{itemize}
+    \item \textbf{Chi phí quản lý luồng (Thread Overhead)}: Việc khởi tạo tập hợp luồng (fork), lập lịch phân chia các vòng lặp cột cho các luồng và thực hiện thu hồi luồng (join) trong OpenMP tốn nhiều thời gian hơn cả thời gian tính toán thực tế của thuật toán Gauss trên ma trận nhỏ.
+    \item \textbf{Phép đồng bộ hóa (Synchronization)}: Cơ chế đồng bộ hóa luồng tại cuối mỗi phân đoạn song song khiến các luồng phải chờ đợi lẫn nhau (barrier overhead), triệt tiêu hoàn toàn lợi ích của tính toán đa nhân.
+\end{itemize}
+Để khắc phục điều này, mã nguồn đã được tối ưu hóa bằng cách thêm mệnh đề điều kiện \texttt{if(n - i >= 16)} vào chỉ thị song song, giúp tự động bỏ qua song song hóa khi khối lượng tính toán còn lại quá nhỏ.
+
+\subsubsection{2. Tại sao hiệu suất song song giảm mạnh khi tăng số luồng CPU và khi kích thước ma trận cực lớn}
+Từ biểu đồ hiệu suất hình \ref{fig:gauss_efficiency}, ta thấy hiệu suất khai thác luồng $E(p)$ sụt giảm rất nhanh khi tăng từ $p=2$ lên $p=8$ và $p=12$. Đồng thời, hiệu suất đạt đỉnh tại $N=1600$ và sụt giảm mạnh khi tăng tiếp lên $N=3000$ và $N=5000$. Hiện tượng này xuất phát từ các nguyên nhân chính sau:
+\begin{itemize}
+    \item \textbf{Giới hạn Định luật Amdahl (Amdahl's Law)}: Thuật toán khử Gauss có các phần tuần tự bắt buộc như chọn phần tử trội (partial pivoting) và giải thế ngược (chứa liên kết dữ liệu tuần tự ngược). Khi tăng số lượng luồng $p$, phần tuần tự này không được tăng tốc và nhanh chóng trở thành yếu tố giới hạn độ tăng tốc cực đại, kéo tụt hiệu suất $E(p)$.
+    \item \textbf{Hiện tượng tràn bộ nhớ đệm (Cache Thrashing) ở cỡ mẫu cực lớn}: Tại kích thước $N=1600$, dung lượng ma trận khoảng 20MB, vẫn có thể chứa chủ yếu trong L3 Cache của các CPU hiện đại (thường từ 24MB đến 32MB). Tuy nhiên, khi tăng lên $N=3000$ (ma trận chiếm ~72MB) và $N=5000$ (ma trận chiếm ~200MB), kích thước ma trận vượt quá dung lượng L3 Cache rất nhiều. Điều này làm tăng đột biến các lỗi truy xuất bộ nhớ đệm (Cache Misses), buộc các luồng phải trực tiếp đọc ghi RAM.
+    \item \textbf{Nghẽn băng thông bộ nhớ (Memory Bandwidth Bottleneck)}: Thuật toán khử Gauss có cường độ tính toán trên mỗi truy cập bộ nhớ (Arithmetic Intensity) thấp. Khi phải đọc/ghi liên tục dữ liệu ma trận từ RAM, bus bộ nhớ dùng chung bị quá tải. Khi nhiều luồng cùng thực hiện các phép toán trừ hàng song song, chúng tranh chấp băng thông bộ nhớ cực kỳ khốc liệt, dẫn đến việc CPU bị bỏ đói dữ liệu (Memory Stalling) và làm sụt giảm hệ số tăng tốc Speedup thực tế (tại $N=5000$, Speedup tối đa của 12 luồng chỉ đạt $1.29$).
+    \item \textbf{Chi phí khởi tạo song song lặp lại nhiều lần}: Thuật toán Gauss phải mở song song và đồng bộ hóa luồng lặp đi lặp lại $N$ lần (mỗi bước khử một cột). Với $N=5000$, OpenMP phải thực hiện việc fork-join liên tục 5000 lần, tạo ra chi phí quản lý luồng tích lũy cực lớn.
+    \item \textbf{Ảnh hưởng của nhân logic (Hyper-threading)}: Cấu hình hệ thống có 12 luồng logic được ánh xạ từ 6 nhân vật lý. Khi chạy hết công suất 12 luồng, các luồng logic phải chia sẻ chung ALU và bộ nhớ đệm, khiến hiệu năng không thể tăng tuyến tính.
+\end{itemize}
+
+\subsection{Hướng tối ưu hóa và thực nghiệm cải tiến}
+Để khắc phục hai nguyên nhân chính gây suy sụt hiệu năng khi kích thước hệ phương trình lớn (là \textit{nghẽn băng thông bộ nhớ / tràn cache} và \textit{chi phí khởi tạo vùng song song lặp lại nhiều lần}), chúng tôi đề xuất và thực hiện thực nghiệm hai giải pháp cải tiến mã nguồn như sau:
+
+\begin{enumerate}
+    \item \textbf{Vùng song song đơn nhất (Single Parallel Region)}: Thay vì đóng/mở vùng song song ở mỗi bước lặp cột $i$ (gây chi phí Fork-Join $N$ lần), ta bao quanh toàn bộ vòng lặp lớn bằng một chỉ thị \texttt{\#pragma omp parallel} duy nhất. Trong đó:
+    \begin{itemize}
+        \item Khâu tìm phần tử trội tuần tự được thực hiện bởi một luồng đơn nhất thông qua chỉ thị \texttt{\#pragma omp single}. Rào chắn đồng bộ hóa ngầm định (implicit barrier) ở cuối khối \texttt{single} đảm bảo các luồng khác chờ tráo dòng hoàn thành.
+        \item Khâu khử dòng song song được thực hiện bằng chỉ thị chia sẻ công việc \texttt{\#pragma omp for}. Điều này giúp tái sử dụng các luồng liên tục mà không sinh chi phí khởi tạo lại.
+    \end{itemize}
+    \item \textbf{Mảng 1D phẳng (Flat 1D Array)}: Biến đổi biểu diễn ma trận hệ số từ dạng mảng của các vector (\texttt{vector<vector<double>>}) phân mảnh sang mảng một chiều liên tục (\texttt{vector<double>}) có kích thước $N \times N$.
+    \begin{itemize}
+        \item Giúp toàn bộ dữ liệu của ma trận nằm kề nhau trong RAM, nâng cao tính cục bộ không gian (spatial locality). Khi CPU truy xuất hàng, cơ chế nạp trước của phần cứng (Hardware Prefetcher) hoạt động tối đa hiệu năng để đưa dữ liệu vào các Cache Line.
+        \item Loại bỏ việc giải tham chiếu con trỏ kép (pointer dereferencing) và hỗ trợ trình biên dịch tự động thực hiện vector hóa SIMD (AVX2/AVX-512) cho vòng lặp khử trong cùng.
+    \end{itemize}
+\end{enumerate}
+
+Chúng tôi đã tiến hành đo đạc so sánh hiệu năng giữa phiên bản gốc (Original) và phiên bản tối ưu hóa toàn diện (Optimized) ở kích thước ma trận lớn $N = 5000$ (kích thước ma trận chiếm ~200MB trong RAM) trên các cấu hình luồng khác nhau. Kết quả thực nghiệm được tổng hợp trong Bảng~\ref{tab:gauss_optimized_comparison}.
+
+\begin{table}[H]
+  \centering
+  \caption{So sánh thời gian thực thi (giây) giữa Bản gốc và Bản tối ưu ($N=5000$)}
+  \label{tab:gauss_optimized_comparison}
+  \vspace{0.2cm}
+  \small
+  \begin{tabular}{c|cc|c}
+    \toprule
+    \textbf{Số luồng $p$} & \textbf{Bản gốc (Original)} & \textbf{Bản tối ưu (Optimized)} & \textbf{Tốc độ cải thiện (\%)} \\
+    \midrule
+    $p=1$ (Seq) & 21.6805 & 21.1000 & +2.7\% \\
+    $p=2$ & 18.2335 & 17.9125 & +1.8\% \\
+    $p=8$ & 15.8245 & 15.6635 & +1.0\% \\
+    $p=12$ & 15.5815 & 15.7045 & -0.8\% \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\textbf{Nhận xét kết quả tối ưu hóa}:
+Kết quả thực nghiệm cho thấy phiên bản tối ưu hóa chạy nhanh hơn phiên bản gốc ở hầu hết các cấu hình luồng (cải thiện từ 1.0\% đến 2.7\%). Sự cải thiện này đến từ việc loại bỏ overhead quản lý luồng lặp lại và tăng hiệu quả truy cập bộ nhớ đệm. 
+
+Tuy nhiên, tốc độ tăng tốc Speedup của cả bản tối ưu vẫn bị giới hạn khi số luồng tăng lên (từ 1 luồng đến 12 luồng). Điều này chứng minh rằng ở kích thước lớn $N=5000$ (chiếm 200MB), bài toán khử Gauss bị nghẽn băng thông bộ nhớ RAM cực kỳ nặng nề; và để đạt được tốc độ cao hơn nữa, bắt buộc phải sử dụng các thuật toán chia khối phức tạp hơn như phân rã Block LU (Tiled LU) để tăng tỷ lệ tái sử dụng dữ liệu trên Cache L3.
 
 \section{Phương pháp lặp Jacobi (Khung đề mục hoàn thiện)}
 \textit{Lưu ý: Phần phương pháp lặp Jacobi và song song hóa của nó do thành viên Trần Thị Khánh Huyền chịu trách nhiệm nghiên cứu, cài đặt mã nguồn và sẽ trình bày chi tiết tại mục này trong các phiên bản báo cáo tiếp theo.}

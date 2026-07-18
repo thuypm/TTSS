@@ -61,3 +61,9 @@ Desktop.ini
 *.bak
 *.swp
 *.swo
+
+# Large Gauss benchmark files
+gauss/input_3000.json
+gauss/input_5000.json
+gauss/output_3000.json
+gauss/output_5000.json

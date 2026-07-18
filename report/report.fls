@@ -323,6 +323,13 @@ INPUT .\report.out
 OUTPUT report.out
 INPUT C:\Users\PC\AppData\Local\Programs\MiKTeX\fonts\tfm\vntex\vnr\vnbx12.tfm
 INPUT C:\Users\PC\AppData\Local\Programs\MiKTeX\fonts\tfm\vntex\vnr\vnbx12.tfm
+INPUT .\logo hust.png
+INPUT .\logo hust.png
+INPUT .\logo hust.png
+INPUT .\logo hust.png
+INPUT .\logo hust.png
+INPUT .\logo hust.png
+INPUT .\logo hust.png
 INPUT C:\Users\PC\AppData\Local\Programs\MiKTeX\fonts\tfm\vntex\vnr\vnbx12.tfm
 INPUT C:\Users\PC\AppData\Local\Programs\MiKTeX\fonts\tfm\vntex\vnr\vnbx12.tfm
 INPUT C:\Users\PC\AppData\Local\Programs\MiKTeX\fonts\tfm\public\cm\cmr8.tfm

@@ -1,6 +1,6 @@
 # Fdb version 4
-["pdflatex"] 1784369521.16789 "d:/Flutter/TTSS/report/report.tex" "report.pdf" "report" 1784369522.67104 0
-  "C:/Users/PC/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map" 1784369080 88371 b965f57369ed322039596060d18f4416 ""
+["pdflatex"] 1784386906.90607 "d:/Flutter/TTSS/report/report.tex" "report.pdf" "report" 1784386908.73158 0
+  "C:/Users/PC/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map" 1784384080 88371 b965f57369ed322039596060d18f4416 ""
   "C:/Users/PC/AppData/Local/MiKTeX/fonts/pk/ljfour/jknappen/ec/dpi600/tcrm1200.pk" 1783843436 14064 0510edbe9ecc96f53e0399470b269aae ""
   "C:/Users/PC/AppData/Local/MiKTeX/miktex/data/le/pdftex/pdflatex.fmt" 1782828080 13365645 24a6a458ced3997a0105c82d30e95ea9 ""
   "C:/Users/PC/AppData/Local/Programs/MiKTeX/fonts/tfm/jknappen/ec/tcrm1200.tfm" 993062508 1444 95ffe0f19b974d50849790c8225c7ef7 ""
@@ -224,11 +224,12 @@
   "C:/Users/PC/AppData/Local/Programs/MiKTeX/tex/latex/vntex/vietnam.sty" 1368738347 2477 91784aa2c9213f74609391e3cae65a13 ""
   "C:/Users/PC/AppData/Local/Programs/MiKTeX/tex/latex/vntex/vncaps.tex" 1368738347 3273 a55ebdb07413d2fea580f210e3c0b252 ""
   "C:/Users/PC/AppData/Local/Programs/MiKTeX/tex/latex/xcolor/xcolor.sty" 1729265222 55384 b454dec21c2d9f45ec0b793f0995b992 ""
-  "d:/Flutter/TTSS/report/report.tex" 1784369520 28598 8457f62dd955aa7ca69dda42870414c2 ""
-  "report.aux" 1784369522 3685 439908dbecc91dbf948db22d0d628ae8 "pdflatex"
-  "report.out" 1784369522 2852 23375338e75b606cc5352dd553a1c659 "pdflatex"
-  "report.tex" 1784369520 28598 8457f62dd955aa7ca69dda42870414c2 ""
-  "report.toc" 1784369522 1150 4b002fc9aa017b6649170d77ad050cd1 "pdflatex"
+  "d:/Flutter/TTSS/report/report.tex" 1784386906 42884 a1c6ea702cb578b8e8b594071cf0552c ""
+  "logo hust.png" 1784384254 45156 4f86290eeffaef11b8f38e4fd2243a95 ""
+  "report.aux" 1784386908 6516 18f83fabc1b465ae06db2182580e29f4 "pdflatex"
+  "report.out" 1784386908 4437 424833a340d28e04f80b03092f73a82a "pdflatex"
+  "report.tex" 1784386906 42884 a1c6ea702cb578b8e8b594071cf0552c ""
+  "report.toc" 1784386908 2107 1918c935ea10b462d65f082bed90d651 "pdflatex"
   (generated)
   "report.aux"
   "report.log"

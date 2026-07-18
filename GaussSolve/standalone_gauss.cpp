@@ -25,11 +25,7 @@ vector<double> solveGaussDebug(const vector<vector<double>>& A, const vector<dou
     vector<vector<double>> tempA = A;
     vector<double> tempB = B;
 
-    cout << "Ma tran bo sung ban dau [A|B]:" << endl;
-    printMatrixState(tempA, tempB);
-
     for (int i = 0; i < n; ++i) {
-        cout << "\n=== Buoc " << i + 1 << ": Khu cot " << i << " ===" << endl;
         // Chọn phần tử trội (partial pivoting)
         int pivot = i;
         for (int j = i + 1; j < n; ++j) {
@@ -37,18 +33,10 @@ vector<double> solveGaussDebug(const vector<vector<double>>& A, const vector<dou
                 pivot = j;
             }
         }
-        
-        cout << "Gia tri lon nhat tren cot " << i << " ke tu dong " << i << " tro di la: " 
-             << tempA[pivot][i] << " (dong " << pivot << ")" << endl;
 
         if (pivot != i) {
-            cout << "Hoan vi dong " << i << " va dong " << pivot << endl;
             swap(tempA[i], tempA[pivot]);
             swap(tempB[i], tempB[pivot]);
-            cout << "Ma tran sau khi hoan vi dong:" << endl;
-            printMatrixState(tempA, tempB);
-        } else {
-            cout << "Khong can hoan vi dong." << endl;
         }
 
         if (abs(tempA[i][i]) < 1e-9) {
@@ -59,30 +47,23 @@ vector<double> solveGaussDebug(const vector<vector<double>>& A, const vector<dou
         #pragma omp parallel for if(n >= 3)
         for (int j = i + 1; j < n; ++j) {
             double factor = tempA[j][i] / tempA[i][i];
-            cout << "[Thread " << omp_get_thread_num() << "] Dong " << j 
-                 << " = Dong " << j << " - (" << factor << ") * Dong " << i << endl;
             tempA[j][i] = 0.0;
             for (int k = i + 1; k < n; ++k) {
                 tempA[j][k] -= factor * tempA[i][k];
             }
             tempB[j] -= factor * tempB[i];
         }
-
-        cout << "Ma tran sau khi khu cot " << i << ":" << endl;
-        printMatrixState(tempA, tempB);
     }
 
     // Thế ngược (tuần tự vì có tính phụ thuộc dữ liệu ngược)
-    cout << "\n=== Giai doan the nguoc ===" << endl;
     vector<double> x(n);
     for (int i = n - 1; i >= 0; --i) {
         double sum = 0.0;
+        #pragma omp parallel for reduction(+:sum) if(n - i - 1 >= 4)
         for (int j = i + 1; j < n; ++j) {
             sum += tempA[i][j] * x[j];
         }
         x[i] = (tempB[i] - sum) / tempA[i][i];
-        cout << "Tính x[" << i + 1 << "] = (" << tempB[i] << " - " << sum << ") / " << tempA[i][i] 
-             << " = " << x[i] << endl;
     }
     return x;
 }
