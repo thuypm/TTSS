@@ -1,0 +1,181 @@
+\section{Phân tích song song hóa bằng OpenMP}
+Trong giai đoạn khử xuôi, tại mỗi bước lặp chốt cột $i$, các phép biến đổi được áp dụng độc lập cho tất cả các dòng phía dưới dòng $i$. Sự độc lập dữ liệu này cho phép thực hiện song song hóa một cách hiệu quả.
+
+Dưới đây là phần triển khai mã nguồn giải hệ phương trình tuyến tính bằng phương pháp khử Gauss trong tệp \texttt{solvers.cpp}:
+
+\begin{lstlisting}[language=C++, caption={Thuật toán khử Gauss song song hóa với OpenMP}]
+vector<double> solveGauss(const vector<vector<double>>& A, const vector<double>& B) {
+    int n = A.size();
+    vector<vector<double>> tempA = A;
+    vector<double> tempB = B;
+
+    for (int i = 0; i < n; ++i) {
+        // 1. Chon phan tu troi (partial pivoting)
+        int pivot = i;
+        for (int j = i + 1; j < n; ++j) {
+            if (abs(tempA[j][i]) > abs(tempA[pivot][i])) {
+                pivot = j;
+            }
+        }
+        if (pivot != i) {
+            swap(tempA[i], tempA[pivot]);
+            swap(tempB[i], tempB[pivot]);
+        }
+        if (abs(tempA[i][i]) < 1e-9) {
+            throw runtime_error("Ma tran suy bien, khong the giai bang Gauss.");
+        }
+
+        // 2. Khu xuoi song song hoa bang OpenMP
+        #pragma omp parallel for if(n >= 3)
+        for (int j = i + 1; j < n; ++j) {
+            double factor = tempA[j][i] / tempA[i][i];
+            tempA[j][i] = 0.0;
+            for (int k = i + 1; k < n; ++k) {
+                tempA[j][k] -= factor * tempA[i][k];
+            }
+            tempB[j] -= factor * tempB[i];
+        }
+    }
+
+    // 3. The nguoc (tuan tu vi co tinh phu thuoc du lieu nguoc)
+    vector<double> x(n);
+    for (int i = n - 1; i >= 0; --i) {
+        double sum = 0.0;
+        for (int j = i + 1; j < n; ++j) {
+            sum += tempA[i][j] * x[j];
+        }
+        x[i] = (tempB[i] - sum) / tempA[i][i];
+    }
+    return x;
+}
+\end{lstlisting}
+
+\subsection*{Phân tích chi tiết mã nguồn:}
+\begin{itemize}
+    \item \textbf{Phần 1: Chọn phần tử trội (Dòng 13-26)} \\
+          Nhằm giảm thiểu sai số tích lũy do làm tròn số thực và tránh lỗi chia cho không (division by zero), giải thuật xác định dòng chứa phần tử có giá trị tuyệt đối lớn nhất tại cột đang xét để làm phần tử chốt (pivot). Do tính phụ thuộc tuần tự của khâu so sánh, bước chọn phần tử trội được thực hiện tuần tự nhằm đảm bảo tính đúng đắn trước khi phân phối công việc khử dòng.
+    \item \textbf{Phần 2: Khử xuôi song song hóa (Dòng 28-37)} \\
+          Chỉ thị \texttt{\#pragma omp parallel for if(n >= 3)} được sử dụng.
+          \begin{itemize}
+              \item Mệnh đề điều kiện \texttt{if(n >= 3)} kiểm tra quy mô ma trận. Đối với các hệ phương trình có kích thước rất nhỏ (ví dụ $2 \times 2$), chi phí quản lý luồng (thread creation, synchronization overhead) vượt quá thời gian tính toán thực tế. Do đó, việc song song hóa chỉ được kích hoạt khi kích thước ma trận đủ lớn ($n \ge 3$).
+              \item Mỗi luồng xử lý thực hiện trừ dòng $j$ theo một hệ số tỉ lệ xác định so với dòng chốt $i$ nhằm triệt tiêu hệ số tại cột $i$. Do các phép biến đổi dòng được thực hiện độc lập trên bộ nhớ riêng, quá trình này tránh được tranh chấp bộ nhớ và đạt hiệu suất cao trên kiến trúc đa lõi.
+          \end{itemize}
+    \item \textbf{Phần 3: Thế ngược tuần tự (Dòng 40-49)} \\
+          Giai đoạn thế ngược chứa sự phụ thuộc dữ liệu chặt chẽ do nghiệm $x_i$ được tính trực tiếp từ các nghiệm đã tìm trước đó ($x_{i+1}, x_{i+2}, \dots, x_{n-1}$). Do đó, vòng lặp thế ngược từ $n-1$ về $0$ phải thực thi tuần tự nhằm đảm bảo tính đúng đắn về mặt toán học.
+\end{itemize}
+
+\subsection{Ví dụ minh họa khử Gauss từng bước hệ phương trình $4 \times 4$}
+Để minh họa chi tiết cơ chế chọn phần tử trội và các bước khử dòng trong lập trình song song, xét hệ phương trình tuyến tính kích thước $4 \times 4$ sau:
+\begin{equation*}
+    \begin{cases}
+        2x_1 + x_2 - x_3 + 2x_4 = 11   \\
+        4x_1 + 4x_2 - 2x_3 + 2x_4 = 20 \\
+        2x_1 - x_2 + x_3 + 3x_4 = 8    \\
+        6x_1 + x_2 - x_3 + x_4 = 12
+    \end{cases}
+\end{equation*}
+
+Hệ phương trình này có nghiệm: $x_1 = 1$, $x_2 = 2$, $x_3 = -1$, $x_4 = 3$.
+Ma trận bổ sung ban đầu $[A|B]$:
+\begin{equation*}
+    \left[ \begin{array}{cccc|c}
+            2 & 1  & -1 & 2 & 11 \\
+            4 & 4  & -2 & 2 & 20 \\
+            2 & -1 & 1  & 3 & 8  \\
+            6 & 1  & -1 & 1 & 12
+        \end{array} \right]
+\end{equation*}
+
+\subsubsection*{Bước 1: Khử cột thứ 1 ($i = 0$)}
+\begin{itemize}
+    \item \textbf{Chọn phần tử trội}: Các phần tử trên cột 0 ở bước này lần lượt là $|2|, |4|, |2|, |6|$. Trị tuyệt đối lớn nhất là $|6|$ tại dòng 3. Do đó, ta thực hiện \textbf{hoán vị dòng 0 và dòng 3}.
+          Ma trận sau khi hoán vị dòng:
+          \begin{equation*}
+              \left[ \begin{array}{cccc|c}
+                      6 & 1  & -1 & 1 & 12 \\
+                      4 & 4  & -2 & 2 & 20 \\
+                      2 & -1 & 1  & 3 & 8  \\
+                      2 & 1  & -1 & 2 & 11
+                  \end{array} \right]
+          \end{equation*}
+          Phần tử chốt (pivot) hiện tại là $a_{00} = 6$.
+    \item \textbf{Biến đổi khử (Song song hóa qua các luồng)}:
+          \begin{itemize}
+              \item Dòng 1 = Dòng 1 $- \frac{4}{6} \times$ Dòng 0 $\to \left[0 \quad \frac{10}{3} \quad -\frac{4}{3} \quad \frac{4}{3} \quad \middle| \quad 12\right]$
+              \item Dòng 2 = Dòng 2 $- \frac{2}{6} \times$ Dòng 0 $\to \left[0 \quad -\frac{4}{3} \quad \frac{4}{3} \quad \frac{8}{3} \quad \middle| \quad 4\right]$
+              \item Dòng 3 = Dòng 3 $- \frac{2}{6} \times$ Dòng 0 $\to \left[0 \quad \frac{2}{3} \quad -\frac{2}{3} \quad \frac{5}{3} \quad \middle| \quad 7\right]$
+          \end{itemize}
+\end{itemize}
+Ma trận sau Bước 1:
+\begin{equation*}
+    \left[ \begin{array}{cccc|c}
+            6 & 1            & -1           & 1           & 12 \\
+            0 & \frac{10}{3} & -\frac{4}{3} & \frac{4}{3} & 12 \\
+            0 & -\frac{4}{3} & \frac{4}{3}  & \frac{8}{3} & 4  \\
+            0 & \frac{2}{3}  & -\frac{2}{3} & \frac{5}{3} & 7
+        \end{array} \right]
+\end{equation*}
+
+\subsubsection*{Bước 2: Khử cột thứ 2 ($i = 1$)}
+\begin{itemize}
+    \item \textbf{Chọn phần tử trội}: Xét các phần tử ở cột 1 từ dòng 1 đến dòng 3: $\left|\frac{10}{3}\right|, \left|-\frac{4}{3}\right|, \left|\frac{2}{3}\right|$. Trị tuyệt đối lớn nhất là $\frac{10}{3}$ ở dòng 1, pivot được giữ ở dòng 1. \textbf{Không cần hoán vị dòng}.
+          Phần tử chốt hiện tại là $a_{11} = \frac{10}{3}$.
+    \item \textbf{Biến đổi khử (Song song hóa qua các luồng)}:
+          \begin{itemize}
+              \item Dòng 2 = Dòng 2 $- \left(-\frac{2}{5}\right) \times$ Dòng 1 $\to \left[0 \quad 0 \quad \frac{4}{5} \quad \frac{16}{5} \quad \middle| \quad \frac{44}{5}\right]$
+              \item Dòng 3 = Dòng 3 $- \frac{1}{5} \times$ Dòng 1 $\to \left[0 \quad 0 \quad -\frac{2}{5} \quad \frac{7}{5} \quad \middle| \quad \frac{23}{5}\right]$
+          \end{itemize}
+\end{itemize}
+Ma trận sau Bước 2:
+\begin{equation*}
+    \left[ \begin{array}{cccc|c}
+            6 & 1            & -1           & 1            & 12           \\
+            0 & \frac{10}{3} & -\frac{4}{3} & \frac{4}{3}  & 12           \\
+            0 & 0            & \frac{4}{5}  & \frac{16}{5} & \frac{44}{5} \\
+            0 & 0            & -\frac{2}{5} & \frac{7}{5}  & \frac{23}{5}
+        \end{array} \right]
+\end{equation*}
+
+\subsubsection*{Bước 3: Khử cột thứ 3 ($i = 2$)}
+\begin{itemize}
+    \item \textbf{Chọn phần tử trội}: Xét các phần tử ở cột 2 từ dòng 2 đến dòng 3: $\left|\frac{4}{5}\right|, \left|-\frac{2}{5}\right|$. Trị tuyệt đối lớn nhất là $\frac{4}{5}$ ở dòng 2, pivot được giữ ở dòng 2. \textbf{Không cần hoán vị}.
+          Phần tử chốt hiện tại là $a_{22} = \frac{4}{5}$.
+    \item \textbf{Biến đổi khử}: Dòng 3 = Dòng 3 $- \left(-\frac{1}{2}\right) \times$ Dòng 2 $\to [0 \quad 0 \quad 0 \quad 3 \quad \middle| \quad 9]$.
+\end{itemize}
+Ma trận tam giác trên hoàn chỉnh:
+\begin{equation*}
+    \left[ \begin{array}{cccc|c}
+            6 & 1            & -1           & 1            & 12           \\
+            0 & \frac{10}{3} & -\frac{4}{3} & \frac{4}{3}  & 12           \\
+            0 & 0            & \frac{4}{5}  & \frac{16}{5} & \frac{44}{5} \\
+            0 & 0            & 0            & 3            & 9
+        \end{array} \right]
+\end{equation*}
+
+\subsubsection*{Bước 4: Thế ngược tuần tự}
+Giai đoạn thế ngược được giải từ dưới lên trên:
+\begin{enumerate}
+    \item Tính $x_4$:
+          \begin{equation*}
+              3x_4 = 9 \implies x_4 = 3
+          \end{equation*}
+    \item Tính $x_3$:
+          \begin{equation*}
+              \frac{4}{5}x_3 + \frac{16}{5}x_4 = \frac{44}{5} \implies 4x_3 + 16(3) = 44 \implies 4x_3 = -4 \implies x_3 = -1
+          \end{equation*}
+    \item Tính $x_2$:
+          \begin{equation*}
+              \frac{10}{3}x_2 - \frac{4}{3}x_3 + \frac{4}{3}x_4 = 12 \implies 10x_2 - 4(-1) + 4(3) = 36 \implies 10x_2 = 20 \implies x_2 = 2
+          \end{equation*}
+    \item Tính $x_1$:
+          \begin{equation*}
+              6x_1 + x_2 - x_3 + x_4 = 12 \implies 6x_1 + 2 - (-1) + 3 = 12 \implies 6x_1 = 6 \implies x_1 = 1
+          \end{equation*}
+\end{enumerate}
+
+Như vậy, quá trình khử Gauss đã giải quyết thành công hệ phương trình $4 \times 4$ với các hệ số đa dạng và thu được nghiệm nguyên chính xác là $x = [1 \quad 2 \quad -1 \quad 3]^T$.
+
+
+
+
+

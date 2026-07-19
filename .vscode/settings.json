@@ -1,3 +1,4 @@
 {
-    "cmake.sourceDirectory": "D:/Flutter/TTSS/OpenCVPararell"
+    "cmake.sourceDirectory": "D:/Flutter/TTSS/OpenCVPararell",
+    "latex-workshop.formatting.latex": "latexindent"
 }

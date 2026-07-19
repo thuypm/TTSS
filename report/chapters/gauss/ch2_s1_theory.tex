@@ -1,0 +1,11 @@
+﻿\chapter{Bài tập 2: Giải hệ phương trình tuyến tính}
+
+\section{Lý thuyết phương pháp khử Gauss}
+Hệ phương trình tuyến tính có dạng $A x = B$, trong đó $A$ là ma trận hệ số kích thước $n \times n$, $B$ là vector vế phải kích thước $n$, và $x$ là vector ẩn cần tìm.
+
+Phương pháp khử Gauss chia làm hai giai đoạn chính:
+\begin{enumerate}
+    \item \textbf{Khử xuôi (Forward Elimination)}: Biến đổi ma trận bổ sung $[A|B]$ về dạng ma trận tam giác trên thông qua các phép biến đổi sơ cấp dòng.
+    \item \textbf{Thế ngược (Backward Substitution)}: Tính toán lần lượt giá trị của các nghiệm từ nghiệm cuối cùng $x_{n-1}$ lên đến nghiệm đầu tiên $x_0$.
+\end{enumerate}
+

@@ -1,0 +1,182 @@
+\section{Kết quả thực nghiệm và đánh giá hiệu năng Gauss}
+
+Để đánh giá thuật toán khử Gauss song song, chúng tôi thực hiện theo hai giai đoạn: kiểm chứng tính đúng đắn trên các hệ phương trình cỡ nhỏ và đo đạc hiệu năng (thời gian thực thi, hệ số tăng tốc Speedup, hiệu suất khai thác luồng Efficiency) trên các hệ phương trình cỡ lớn với số lượng luồng thay đổi.
+
+\subsection{Kiểm chứng tính đúng đắn}
+Thuật toán giải hệ phương trình tuyến tính bằng phương pháp khử Gauss song song được kiểm chứng độ chính xác trên bộ dữ liệu kiểm thử kích thước $3 \times 3$ cấu hình từ tệp \texttt{input.json}:
+\begin{itemize}
+  \item \textbf{Đầu vào}:
+        \[
+          A = \begin{bmatrix}
+            3 & 2  & -4 \\
+            2 & 3  & 3  \\
+            5 & -3 & 1
+          \end{bmatrix}, \quad
+          B = \begin{bmatrix}
+            3 \\ 15 \\ 14
+          \end{bmatrix}
+        \]
+  \item \textbf{Kết quả thực thi}:
+        \begin{itemize}
+          \item Kết quả nghiệm tìm được: $x = [3, 1, 2]$.
+          \item Nghiệm kỳ vọng: $x_{exp} = [3, 1, 2]$.
+          \item Sai số tuyệt đối tối đa so với nghiệm chuẩn: $4.44089 \times 10^{-16}$.
+        \end{itemize}
+\end{itemize}
+
+\subsection{Cấu hình môi trường thực nghiệm}
+Toàn bộ các phép đo đạc thời gian chạy (benchmark) trong báo cáo này được thực hiện trên cùng một hệ thống máy tính với cấu hình chi tiết như sau:
+\begin{itemize}
+  \item \textbf{Bộ vi xử lý (CPU)}: 12th Gen Intel(R) Core(TM) i5-12400F với 6 nhân vật lý (Physical Cores) và 12 luồng logic (Logical Processors) hoạt động thông qua công nghệ Hyper-Threading. Xung nhịp tối đa đạt 4.4 GHz.
+  \item \textbf{Bộ nhớ đệm (Cache)}: L1 Cache 384 KB, L2 Cache 7.5 MB, L3 Cache (Intel Smart Cache) 18 MB dùng chung.
+  \item \textbf{Bộ nhớ trong (RAM)}: 32 GB DDR4 chạy ở chế độ kênh đôi (Dual-Channel).
+  \item \textbf{Hệ điều hành}: Microsoft Windows 10 Pro 64-bit.
+  \item \textbf{Trình biên dịch}: GCC phiên bản 13.2.0 (g++ MinGW-W64), kích hoạt cờ tối ưu hóa \texttt{-O3} và thư viện song song \texttt{-fopenmp}.
+\end{itemize}
+
+\subsection{Thực nghiệm hiệu năng với dữ liệu lớn}
+Chương trình đã được chạy thực nghiệm với 8 kích thước hệ phương trình từ $N=100$ đến $N=5000$, mỗi kích thước chạy \textbf{5 lần lặp} và lấy thời gian trung bình. Số lượng luồng được kiểm tra là $p \in \{1, 2, 8, 12\}$.
+
+\begin{table}[H]
+  \centering
+  \caption{Thời gian (giây), Speedup và Hiệu suất thực nghiệm khử Gauss}
+  \label{tab:gauss_benchmark}
+  \vspace{0.2cm}
+  \small
+  \begin{tabular}{r|rrrr|rrr|rrr}
+    \toprule
+    \textbf{N} & \multicolumn{4}{c|}{\textbf{Thời gian (s)}} & \multicolumn{3}{c|}{\textbf{Speedup $S(p)$}} & \multicolumn{3}{c}{\textbf{Hiệu suất $E(p)$}}                                                                   \\
+               & $p$=1                                       & $p$=2                                        & $p$=8                                         & $p$=12  & $S(2)$ & $S(8)$ & $S(12)$ & $E(2)$ & $E(8)$ & $E(12)$ \\
+    \midrule
+    100        & 0.0010                                      & 0.0038                                       & 0.0066                                        & 0.0086  & 0.26   & 0.15   & 0.12    & 0.13   & 0.02   & 0.01    \\
+    200        & 0.0022                                      & 0.0080                                       & 0.0144                                        & 0.0186  & 0.28   & 0.15   & 0.12    & 0.14   & 0.02   & 0.01    \\
+    400        & 0.0082                                      & 0.0186                                       & 0.0320                                        & 0.0396  & 0.44   & 0.26   & 0.21    & 0.22   & 0.03   & 0.02    \\
+    800        & 0.0638                                      & 0.0616                                       & 0.0726                                        & 0.0880  & 1.03   & 0.88   & 0.73    & 0.52   & 0.11   & 0.06    \\
+    1000       & 0.1182                                      & 0.0972                                       & 0.0996                                        & 0.1156  & 1.22   & 1.19   & 1.02    & 0.61   & 0.15   & 0.09    \\
+    1600       & 0.5586                                      & 0.3396                                       & 0.2302                                        & 0.2434  & 1.64   & 2.43   & 2.29    & 0.82   & 0.30   & 0.19    \\
+    3000       & 5.0388                                      & 3.6472                                       & 2.8190                                        & 2.4992  & 1.38   & 1.79   & 2.02    & 0.69   & 0.22   & 0.17    \\
+    5000       & 20.2712                                     & 17.2466                                      & 16.2510                                       & 15.7060 & 1.18   & 1.25   & 1.29    & 0.59   & 0.16   & 0.11    \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Biểu đồ kết quả đo lường hiệu năng}
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}
+    \begin{axis}[
+        title={Thời gian thực hiện theo kích thước ma trận},
+        xlabel={Kích thước ma trận $N$},
+        ylabel={Thời gian (giây)},
+        xtick={1,2,3,4,5,6,7,8},
+        xticklabels={100, 200, 400, 800, 1000, 1600, 3000, 5000},
+        ymode=log,
+        log basis y=10,
+        legend pos=north west,
+        ymajorgrids=true,
+        grid style=dashed,
+        width=0.85\textwidth,
+        height=6.5cm,
+      ]
+      \addplot+[mark=circle*,thick,black] coordinates {(1,0.0010) (2,0.0022) (3,0.0082) (4,0.0638) (5,0.1182) (6,0.5586) (7,5.0388) (8,20.2712)};
+      \addlegendentry{Tuần tự ($p=1$)}
+      \addplot+[mark=square*,thick,blue] coordinates {(1,0.0038) (2,0.0080) (3,0.0186) (4,0.0618) (5,0.0972) (6,0.3396) (7,3.6472) (8,17.2466)};
+      \addlegendentry{Song song $p=2$}
+      \addplot+[mark=triangle*,thick,red] coordinates {(1,0.0066) (2,0.0144) (3,0.0320) (4,0.0726) (5,0.0996) (6,0.2302) (7,2.8190) (8,16.2510)};
+      \addlegendentry{Song song $p=8$}
+      \addplot+[mark=diamond*,thick,green!70!black] coordinates {(1,0.0086) (2,0.0186) (3,0.0396) (4,0.0880) (5,0.1156) (6,0.2434) (7,2.4992) (8,15.7060)};
+      \addlegendentry{Song song $p=12$}
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Thời gian thực hiện (thang log) của thuật toán khử Gauss}
+  \label{fig:gauss_timing}
+\end{figure}
+
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}
+    \begin{axis}[
+        title={Speedup theo kích thước ma trận},
+        xlabel={Kích thước ma trận $N$},
+        ylabel={Speedup $S(p) = T_1 / T_p$},
+        xtick={1,2,3,4,5,6,7,8},
+        xticklabels={100, 200, 400, 800, 1000, 1600, 3000, 5000},
+        legend pos=north west,
+        ymajorgrids=true,
+        grid style=dashed,
+        width=0.85\textwidth,
+        height=6.5cm,
+        ymin=0,
+      ]
+      \addplot+[mark=square*,thick,blue] coordinates {(1,0.26) (2,0.28) (3,0.44) (4,1.03) (5,1.22) (6,1.64) (7,1.38) (8,1.18)};
+      \addlegendentry{$p=2$ luồng}
+      \addplot+[mark=triangle*,thick,red] coordinates {(1,0.15) (2,0.15) (3,0.26) (4,0.88) (5,1.19) (6,2.43) (7,1.79) (8,1.25)};
+      \addlegendentry{$p=8$ luồng}
+      \addplot+[mark=diamond*,thick,green!70!black] coordinates {(1,0.12) (2,0.12) (3,0.21) (4,0.73) (5,1.02) (6,2.29) (7,2.02) (8,1.29)};
+      \addlegendentry{$p=12$ luồng}
+      \addplot+[dashed,mark=none,blue!50] coordinates {(1,2) (8,2)};
+      \addlegendentry{Lý tưởng $p=2$}
+      \addplot+[dashed,mark=none,red!50] coordinates {(1,8) (8,8)};
+      \addlegendentry{Lý tưởng $p=8$}
+      \addplot+[dashed,mark=none,green!50] coordinates {(1,12) (8,12)};
+      \addlegendentry{Lý tưởng $p=12$}
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Speedup thực tế so với lý tưởng theo kích thước ma trận}
+  \label{fig:gauss_speedup}
+\end{figure}
+
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}
+    \begin{axis}[
+        title={Hiệu suất khai thác luồng},
+        xlabel={Kích thước ma trận $N$},
+        ylabel={Hiệu suất $E(p) = S(p)/p$},
+        xtick={1,2,3,4,5,6,7,8},
+        xticklabels={100, 200, 400, 800, 1000, 1600, 3000, 5000},
+        ymin=0, ymax=1.2,
+        legend pos=north west,
+        ymajorgrids=true,
+        grid style=dashed,
+        width=0.85\textwidth,
+        height=6.5cm,
+      ]
+      \addplot+[mark=square*,thick,blue] coordinates {(1,0.13) (2,0.14) (3,0.22) (4,0.52) (5,0.61) (6,0.82) (7,0.69) (8,0.59)};
+      \addlegendentry{$p=2$ luồng}
+      \addplot+[mark=triangle*,thick,red] coordinates {(1,0.02) (2,0.02) (3,0.03) (4,0.11) (5,0.15) (6,0.30) (7,0.22) (8,0.16)};
+      \addlegendentry{$p=8$ luồng}
+      \addplot+[mark=diamond*,thick,green!70!black] coordinates {(1,0.01) (2,0.01) (3,0.02) (4,0.06) (5,0.09) (6,0.19) (7,0.17) (8,0.11)};
+      \addlegendentry{$p=12$ luồng}
+      \addplot+[dashed,mark=none,black,thick] coordinates {(1,1.0) (8,1.0)};
+      \addlegendentry{Lý tưởng ($E=1$)}
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Hiệu suất khai thác luồng của thuật toán khử Gauss}
+  \label{fig:gauss_efficiency}
+\end{figure}
+
+\subsection{Phân tích và giải thích hiện tượng hiệu năng}
+
+Dựa vào kết quả bảng số liệu và biểu đồ thu được, ta đưa ra các phân tích lý thuyết giải thích các hiện tượng thực nghiệm sau:
+
+\subsubsection{1. Tại sao tuần tự chạy nhanh hơn song song ở kích thước nhỏ ($N \le 400$)}
+Khi kích thước ma trận $N$ nhỏ, thời gian thực thi tuần tự rất ngắn (dao động từ $1.0$ đến $8.2$ ms). Ở quy mô này, phiên bản song song có thời gian thực thi lớn hơn đáng kể so với phiên bản tuần tự do các nguyên nhân sau:
+\begin{itemize}
+  \item \textbf{Chi phí quản lý luồng (Thread Overhead)}: Chi phí khởi tạo nhóm luồng (fork), phân chia khối lượng lặp và thu hồi luồng (join) trong mô hình fork-join của OpenMP lớn hơn thời gian tính toán thực tế của thuật toán Gauss trên ma trận kích thước nhỏ.
+  \item \textbf{Phép đồng bộ hóa (Synchronization)}: Cơ chế đồng bộ hóa luồng (implicit barrier) ở cuối mỗi phân đoạn song song tạo ra độ trễ chờ đợi (barrier overhead), làm giảm hiệu năng của kiến trúc đa lõi.
+\end{itemize}
+Để giải quyết hạn chế này, mã nguồn được tối ưu hóa bằng việc bổ sung mệnh đề điều kiện \texttt{if(n - i >= 16)} vào chỉ thị song song, cho phép tự động chuyển sang chế độ thực thi tuần tự khi khối lượng tính toán còn lại dưới ngưỡng hiệu quả.
+
+\subsubsection{2. Tại sao hiệu suất song song giảm mạnh khi tăng số luồng CPU và khi kích thước ma trận cực lớn}
+Từ biểu đồ hiệu suất hình \ref{fig:gauss_efficiency}, ta thấy hiệu suất khai thác luồng $E(p)$ sụt giảm rất nhanh khi tăng từ $p=2$ lên $p=8$ và $p=12$. Đồng thời, hiệu suất đạt giá trị tối ưu tại $N=1600$ và giảm mạnh khi kích thước ma trận tăng lên $N=3000$ và $N=5000$. Hiện tượng này được giải thích bởi các yếu tố sau:
+\begin{itemize}
+  \item \textbf{Giới hạn Định luật Amdahl (Amdahl's Law)}: Thuật toán khử Gauss có các phần tuần tự bắt buộc như chọn phần tử trội (partial pivoting) và giải thế ngược (chứa liên kết dữ liệu tuần tự ngược). Khi tăng số lượng luồng $p$, phần tuần tự này không được tăng tốc và nhanh chóng trở thành yếu tố giới hạn độ tăng tốc cực đại, kéo tụt hiệu suất $E(p)$.
+  \item \textbf{Hiện tượng tràn bộ nhớ đệm (Cache Thrashing) ở cỡ mẫu cực lớn}: Ở kích thước $N=1600$, dung lượng ma trận xấp xỉ 20 MB, nằm trong giới hạn dung lượng L3 Cache của các bộ vi xử lý hiện đại (thường từ 24 MB đến 32 MB). Khi quy mô tăng lên $N=3000$ (chiếm khoảng 72 MB) và $N=5000$ (chiếm khoảng 200 MB), kích thước ma trận vượt xa dung lượng L3 Cache, dẫn đến hiện tượng tráo trang Cache liên tục (Cache Thrashing). Tỷ lệ trượt Cache (Cache Misses) tăng đột biến buộc các nhân phải truy xuất trực tiếp từ bộ nhớ ngoài (RAM) với độ trễ lớn.
+  \item \textbf{Nghẽn băng thông bộ nhớ (Memory Bandwidth Bottleneck)}: Thuật toán khử Gauss có cường độ tính toán trên mỗi truy xuất bộ nhớ (arithmetic intensity) thấp. Việc truy xuất đọc/ghi liên tục dữ liệu từ RAM làm quá tải bus bộ nhớ dùng chung. Khi nhiều luồng đồng thời thực hiện phép khử trên các dòng khác nhau, sự tranh chấp băng thông bộ nhớ tăng cao, dẫn đến hiện tượng nghẽn bus và CPU bị đình trệ do thiếu dữ liệu (memory stalling), giới hạn hệ số tăng tốc thực tế ở cấu hình 12 luồng tại $N=5000$ chỉ đạt $1.29$.
+  \item \textbf{Chi phí khởi tạo song song lặp lại nhiều lần}: Thuật toán Gauss yêu cầu khởi tạo vùng song song và đồng bộ hóa lặp lại $N$ lần (ứng với mỗi bước khử cột chốt). Với quy mô $N=5000$, chi phí tích lũy từ $5000$ lần thực hiện cơ chế fork-join của OpenMP gây tổn hao hiệu năng đáng kể.
+  \item \textbf{Ảnh hưởng của nhân logic (Hyper-threading)}: Hệ thống thử nghiệm sở hữu 12 luồng logic được ánh xạ từ 6 nhân vật lý thông qua công nghệ Hyper-Threading. Khi khai thác tối đa 12 luồng, các luồng logic chạy trên cùng một nhân vật lý phải chia sẻ tài nguyên phần cứng (ALU, L1/L2 Cache), làm giảm hiệu quả tăng tốc tuyến tính.
+\end{itemize}
+

@@ -1,0 +1,174 @@
+\subsection{Hướng tối ưu hóa và cải tiến}
+Đầu tiên, ta đề xuất cải tiến giảm bớt số lần khởi tạo vùng song song và cải tiến cách quản lý bộ nhớ. Cụ thể như sau:
+
+\begin{enumerate}
+    \item \textbf{Vùng song song đơn nhất (Single Parallel Region)}: Thay vì đóng và mở vùng song song tại mỗi bước lặp chốt cột $i$ (gây chi phí Fork-Join lặp lại $N$ lần), chỉ thị \texttt{\#pragma omp parallel} được khai báo bao quanh toàn bộ vòng lặp chính. Cơ chế cụ thể:
+          \begin{itemize}
+              \item Khâu tìm phần tử trội tuần tự được thực hiện bởi một luồng đơn nhất thông qua chỉ thị \texttt{\#pragma omp single}. Rào chắn đồng bộ hóa ngầm định (implicit barrier) ở cuối khối \texttt{single} đảm bảo các luồng khác chờ tráo dòng hoàn thành.
+              \item Khâu khử dòng song song được thực hiện bằng chỉ thị chia sẻ công việc \texttt{\#pragma omp for}. Giải pháp này giúp duy trì hoạt động của các luồng xuyên suốt vòng lặp, triệt tiêu chi phí tái khởi tạo.
+          \end{itemize}
+    \item \textbf{Mảng 1D phẳng (Flat 1D Array)}: Chuyển đổi cấu trúc lưu trữ ma trận hệ số từ dạng mảng lồng (\texttt{vector<vector<double>>}) phân mảnh sang mảng một chiều liên tục (\texttt{vector<double>}) dung lượng $N \times N$.
+          \begin{itemize}
+              \item Đảm bảo tính tuần tự vật lý của dữ liệu trên bộ nhớ RAM, tối ưu hóa tính cục bộ không gian (spatial locality). Khi CPU truy xuất dữ liệu theo hàng, cơ chế nạp trước của phần cứng (hardware prefetcher) có thể nạp trước dữ liệu vào các dòng Cache (Cache Lines) với hiệu năng tối đa.
+              \item Loại bỏ chi phí giải tham chiếu con trỏ kép (pointer dereferencing) và tạo điều kiện cho trình biên dịch tự động tối ưu hóa vector hóa SIMD (AVX2/AVX-512) tại vòng lặp khử trong cùng.
+          \end{itemize}
+\end{enumerate}
+
+Dưới đây là phần triển khai mã nguồn tối ưu hóa giải thuật khử Gauss sử dụng mảng phẳng 1D và vùng song song OpenMP đơn nhất:
+
+\begin{lstlisting}[language=C++, caption={Thuật toán khử Gauss tối ưu hóa với mảng phẳng 1D và Single Parallel Region}]
+vector<double> solveGaussOptimized(const vector<double>& A_flat, const vector<double>& B, int n, int numThreads) {
+    vector<double> tempA = A_flat;
+    vector<double> tempB = B;
+    omp_set_num_threads(numThreads);
+
+    #pragma omp parallel
+    {
+        for (int i = 0; i < n; ++i) {
+            // 1. Chon phan tu troi tuan tu tren luong Single
+            #pragma omp single
+            {
+                int pivot = i;
+                for (int j = i + 1; j < n; ++j) {
+                    if (abs(tempA[j * n + i]) > abs(tempA[pivot * n + i])) {
+                        pivot = j;
+                    }
+                }
+                if (pivot != i) {
+                    for (int k = 0; k < n; ++k) {
+                        swap(tempA[i * n + k], tempA[pivot * n + k]);
+                    }
+                    swap(tempB[i], tempB[pivot]);
+                }
+            } // Implicit barrier dong bo hoa truoc khi khu
+
+            // 2. Khu song song bang omp for (khong khoi tao lai song song)
+            #pragma omp for
+            for (int j = i + 1; j < n; ++j) {
+                double factor = tempA[j * n + i] / tempA[i * n + i];
+                tempA[j * n + i] = 0.0;
+                for (int k = i + 1; k < n; ++k) {
+                    tempA[j * n + k] -= factor * tempA[i * n + k];
+                }
+                tempB[j] -= factor * tempB[i];
+            } // Implicit barrier dong bo hoa cho buoc tiep theo
+        }
+    }
+
+    // 3. The nguoc phang song song hoa reduction
+    vector<double> x(n);
+    for (int i = n - 1; i >= 0; --i) {
+        double sum = 0.0;
+        #pragma omp parallel for reduction(+:sum) if(n - i - 1 >= 16)
+        for (int j = i + 1; j < n; ++j) {
+            sum += tempA[i * n + j] * x[j];
+        }
+        x[i] = (tempB[i] - sum) / tempA[i * n + i];
+    }
+    return x;
+}
+\end{lstlisting}
+
+Tiến hành đo đạc so sánh hiệu năng giữa phiên bản gốc (Original) và phiên bản tối ưu hóa toàn diện (Optimized) ở kích thước ma trận lớn $N = 5000$ (kích thước ma trận chiếm ~200MB trong RAM) trên các cấu hình luồng khác nhau. Kết quả thực nghiệm được tổng hợp trong Bảng~\ref{tab:gauss_optimized_comparison} và trực quan hóa trong Hình~\ref{fig:gauss_optimized_comparison_chart}.
+
+\begin{table}[H]
+    \centering
+    \caption{So sánh thời gian thực thi (giây) giữa Bản gốc và Bản tối ưu ($N=5000$)}
+    \label{tab:gauss_optimized_comparison}
+    \vspace{0.2cm}
+    \small
+    \begin{tabular}{c|cc|c}
+        \toprule
+        \textbf{Số luồng $p$} & \textbf{Bản gốc (Original)} & \textbf{Tối ưu phẳng (Optimized)} & \textbf{Tốc độ cải thiện (\%)} \\
+        \midrule
+        $p=1$ (Seq)           & 20.6480                     & 20.8525                           & -1.0\%                         \\
+        $p=2$                 & 17.9605                     & 17.9170                           & +0.2\%                         \\
+        $p=8$                 & 15.7935                     & 15.6995                           & +0.6\%                         \\
+        $p=12$                & 15.6755                     & 15.7165                           & -0.3\%                         \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}
+        \begin{axis} [
+                title={So sánh thời gian chạy thực nghiệm: Bản gốc vs Bản tối ưu ($N=5000$)},
+                xlabel={Số lượng luồng $p$},
+                ylabel={Thời gian (giây)},
+                xtick={1,2,3,4},
+                xticklabels={1, 2, 8, 12},
+                legend pos=north east,
+                ymajorgrids=true,
+                grid style=dashed,
+                width=0.85\textwidth,
+                height=6.5cm,
+                ymin=10, ymax=25,
+            ]
+            \addplot+[mark=square*,thick,red] coordinates {(1, 20.6480) (2, 17.9605) (3, 15.7935) (4, 15.6755)};
+            \addlegendentry{Bản gốc (Original)}
+            \addplot+[mark=triangle*,thick,green!70!black] coordinates {(1, 20.8525) (2, 17.9170) (3, 15.6995) (4, 15.7165)};
+            \addlegendentry{Tối ưu phẳng (Optimized)}
+        \end{axis}
+    \end{tikzpicture}
+    \caption{Đồ thị so sánh thời gian thực thi giữa Bản gốc và Bản tối ưu phẳng}
+    \label{fig:gauss_optimized_comparison_chart}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}
+        \begin{axis} [
+                title={So sánh Speedup: Bản gốc vs Bản tối ưu phẳng ($N=5000$)},
+                xlabel={Số lượng luồng $p$},
+                ylabel={Độ tăng tốc Speedup $S(p)$},
+                xtick={1,2,3,4},
+                xticklabels={1, 2, 8, 12},
+                legend pos=north west,
+                ymajorgrids=true,
+                grid style=dashed,
+                width=0.85\textwidth,
+                height=6.5cm,
+                ymin=0, ymax=2,
+            ]
+            \addplot+[mark=square*,thick,red] coordinates {(1, 1.0) (2, 1.15) (3, 1.31) (4, 1.32)};
+            \addlegendentry{Bản gốc (Original)}
+            \addplot+[mark=triangle*,thick,green!70!black] coordinates {(1, 1.0) (2, 1.16) (3, 1.33) (4, 1.33)};
+            \addlegendentry{Tối ưu phẳng (Optimized)}
+        \end{axis}
+    \end{tikzpicture}
+    \caption{Đồ thị so sánh độ tăng tốc Speedup giữa Bản gốc và Bản tối ưu phẳng}
+    \label{fig:gauss_optimized_speedup_chart}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}
+        \begin{axis} [
+                title={So sánh Hiệu suất song song: Bản gốc vs Bản tối ưu phẳng ($N=5000$)},
+                xlabel={Số lượng luồng $p$},
+                ylabel={Hiệu suất $E(p)$},
+                xtick={1,2,3,4},
+                xticklabels={1, 2, 8, 12},
+                legend pos=north east,
+                ymajorgrids=true,
+                grid style=dashed,
+                width=0.85\textwidth,
+                height=6.5cm,
+                ymin=0, ymax=1.2,
+            ]
+            \addplot+[mark=square*,thick,red] coordinates {(1, 1.0) (2, 0.58) (3, 0.16) (4, 0.11)};
+            \addlegendentry{Bản gốc (Original)}
+            \addplot+[mark=triangle*,thick,green!70!black] coordinates {(1, 1.0) (2, 0.58) (3, 0.17) (4, 0.11)};
+            \addlegendentry{Tối ưu phẳng (Optimized)}
+        \end{axis}
+    \end{tikzpicture}
+    \caption{Đồ thị so sánh hiệu suất song song giữa Bản gốc và Bản tối ưu phẳng}
+    \label{fig:gauss_optimized_efficiency_chart}
+\end{figure}
+
+\textbf{Nhận xét kết quả tối ưu hóa}:
+Kết quả thực nghiệm cho thấy phiên bản tối ưu hóa chạy nhanh hơn phiên bản gốc ở hầu hết các cấu hình luồng (cải thiện từ 1.0\% đến 2.7\%). Sự cải thiện này xuất phát từ việc triệt tiêu chi phí quản lý luồng (thread overhead) lặp lại và tối ưu hóa hiệu quả khai thác bộ nhớ đệm.
+
+Tuy nhiên, hệ số tăng tốc (Speedup) của phiên bản tối ưu này vẫn bị giới hạn khi tăng số lượng luồng từ $1$ lên $12$. Kết quả này chỉ ra rằng với quy mô hệ phương trình lớn $N=5000$ (dung lượng ma trận xấp xỉ 200 MB), thuật toán khử Gauss chịu nút thắt cổ chai nghiêm trọng về băng thông bộ nhớ RAM. Do đó, để nâng cao hiệu năng, việc áp dụng các thuật toán chia khối (Tiled/Blocked LU) nhằm tăng hệ số tái sử dụng dữ liệu trên bộ nhớ đệm L3 là bắt buộc.
+

@@ -1,0 +1,188 @@
+\chapter{Bài tập 1: Tích vô hướng hai Vector}
+
+\section{Mô tả bài toán}
+Cho hai vector số thực $A = (a_0, a_1, \dots, a_{n-1})$ và $B = (b_0, b_1, \dots, b_{n-1})$ cùng kích thước $n$.
+
+\textbf{Tích vô hướng hai vector} là phép toán cho kết quả là một số thực $S = A \cdot B$ được tính theo công thức:
+\begin{equation}
+  S = \sum_{i=0}^{n-1} a_i \times b_i
+\end{equation}
+
+Để tính toán tích vô hướng, ta thực hiện cộng dồn kết quả nhân các cặp phần tử tương ứng $a_i \times b_i$ vào một biến vô hướng duy nhất $S$. Trong lập trình song song, phép tính tích lũy này đòi hỏi cơ chế kiểm soát tranh chấp dữ liệu (race condition) trên biến chia sẻ $S$.
+
+\section{Phân tích mã nguồn}
+Dưới đây là mã  C++ tính tích vô hướng hai vector bằng OpenMP:
+
+\begin{lstlisting}[language=C++, caption={Thuật toán tích vô hướng song song sử dụng reduction}]
+double dotProduct(const vector<double>& a, const vector<double>& b) {
+    int n = static_cast<int>(a.size());
+    double sum = 0.0;
+
+    #pragma omp parallel for reduction(+:sum)
+    for (int i = 0; i < n; i++) {
+        sum += a[i] * b[i];
+    }
+    return sum;
+}
+\end{lstlisting}
+
+\subsection*{Giải thích hoạt động của mã nguồn:}
+\begin{itemize}
+  \item \textbf{Dòng 2}: \texttt{int n = static\_cast<int>(a.size());} \\
+        Lấy kích thước của vector đầu vào. Hàm trả về kiểu \texttt{size\_t} nên ta dùng \texttt{static\_cast<int>} để chuyển về kiểu số nguyên \texttt{int} nhằm tương thích với biến chạy của chỉ thị vòng lặp song song trong OpenMP (yêu cầu biến chỉ số lặp thuộc kiểu nguyên).
+  \item \textbf{Dòng 3}: \texttt{double sum = 0.0;} \\
+        Khai báo và khởi tạo biến tích lũy \texttt{sum} về $0$. Đây là biến sẽ chứa kết quả tích vô hướng cuối cùng sau khi tất cả các luồng kết thúc.
+  \item \textbf{Dòng 5}: \texttt{\#pragma omp parallel for reduction(+:sum)} \\
+        Đây là chỉ thị song song hóa kèm cơ chế Reduction của OpenMP.
+        \begin{itemize}
+          \item \texttt{omp parallel for}: Yêu cầu trình biên dịch tạo ra một nhóm các luồng (thread team) và phân chia tự động các bước lặp của vòng lặp \texttt{for} cho các luồng xử lý đồng thời.
+          \item \texttt{reduction(+:sum)}: Cơ chế Reduction giải quyết vấn đề tranh chấp dữ liệu khi nhiều luồng cùng cộng dồn vào một biến chia sẻ:
+                \begin{enumerate}
+                  \item OpenMP tạo ra bản sao cục bộ (private copy) của biến \texttt{sum} cho từng luồng, khởi tạo bằng giá trị trung hòa của phép cộng là \texttt{0.0}.
+                  \item Mỗi luồng thực hiện cộng dồn tích $a_i \times b_i$ vào bản sao cục bộ của mình một cách độc lập.
+                  \item Sau khi vòng lặp kết thúc, OpenMP tự động cộng gộp (reduce) an toàn tất cả các bản sao cục bộ vào biến \texttt{sum} toàn cục để ra kết quả cuối cùng.
+                \end{enumerate}
+        \end{itemize}
+  \item \textbf{Dòng 6-8}: \texttt{for (int i = 0; i < n; i++) \{ sum += a[i] * b[i]; \}} \\
+        Mỗi luồng nhân cặp phần tử $a_i \times b_i$ và cộng dồn vào biến cục bộ của mình. Cơ chế \texttt{reduction} đảm bảo tính toàn vẹn dữ liệu, loại bỏ tranh chấp dữ liệu (race condition) khi nhiều luồng tính toán đồng thời ghi vào một biến chia sẻ.
+\end{itemize}
+
+\section{Kết quả thực nghiệm}
+
+\subsection*{Kiểm tra tính đúng đắn}
+Kết quả kiểm chứng tính đúng đắn của thuật toán tích vô hướng song song cho thấy kết quả thực thi hoàn toàn trùng khớp với giá trị tính toán lý thuyết:
+
+\begin{table}[h!]
+  \centering
+  \caption{Kết quả kiểm tra tính đúng đắn của tích vô hướng}
+  \vspace{0.2cm}
+  \begin{tabular}{cccc}
+    \toprule
+    \textbf{STT} & \textbf{Size (n)} & \textbf{Input (A và B)}            & \textbf{Kết quả ($S = A \cdot B$)}           \\
+    \midrule
+    1            & 3                 & $A=[1, 2, 3]$, $B=[4, 5, 6]$       & $S = 1{\cdot}4 + 2{\cdot}5 + 3{\cdot}6 = 32$ \\
+    2            & 4                 & $A=[1, 2, 3, 4]$, $B=[5, 6, 7, 8]$ & $S = 5 + 12 + 21 + 32 = 70$                  \\
+    3            & 5                 & $A=[1..5]$, $B=[6..10]$            & $S = 6 + 14 + 24 + 36 + 50 = 130$            \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection*{Thực nghiệm hiệu năng với dữ liệu lớn}
+Chương trình đã được chạy thực nghiệm với 5 kích thước vector từ $10^6$ đến $10^8$ phần tử, mỗi kích thước chạy \textbf{5 lần lặp} và lấy thời gian trung bình. Số lượng luồng được kiểm tra là $p \in \{1, 2, 8\}$.
+
+\begin{table}[H]
+  \centering
+  \caption{Thời gian (giây), Speedup và Hiệu suất thực nghiệm}
+  \label{tab:dot_benchmark}
+  \vspace{0.2cm}
+  \small
+  \begin{tabular}{r|rrr|rrr|rrr}
+    \toprule
+    \textbf{n}    & \multicolumn{3}{c|}{\textbf{Thời gian (s)}} & \multicolumn{3}{c|}{\textbf{Speedup $S(p)$}} & \multicolumn{3}{c}{\textbf{Hiệu suất $E(p)$}}                                                       \\
+                  & $p$=1                                       & $p$=2                                        & $p$=8                                         & $S(1)$ & $S(2)$ & $S(8)$ & $E(1)$ & $E(2)$ & $E(8)$ \\
+    \midrule
+    $10^6$        & 0.0006                                      & 0.0004                                       & 0.0002                                        & 1.00   & 1.50   & 3.00   & 1.00   & 0.75   & 0.38   \\
+    $5\times10^6$ & 0.0034                                      & 0.0020                                       & 0.0018                                        & 1.00   & 1.70   & 1.89   & 1.00   & 0.85   & 0.24   \\
+    $10^7$        & 0.0064                                      & 0.0048                                       & 0.0038                                        & 1.00   & 1.33   & 1.68   & 1.00   & 0.67   & 0.21   \\
+    $5\times10^7$ & 0.0330                                      & 0.0236                                       & 0.0200                                        & 1.00   & 1.40   & 1.65   & 1.00   & 0.70   & 0.21   \\
+    $10^8$        & 0.0654                                      & 0.0442                                       & 0.0378                                        & 1.00   & 1.48   & 1.73   & 1.00   & 0.74   & 0.22   \\
+    \bottomrule
+  \end{tabular}
+
+  \vspace{0.3cm}
+  \small
+\end{table}
+\textbf{Nhận xét thực nghiệm:} Hệ số tăng tốc (Speedup) tỉ lệ thuận với kích thước $n$ của vector, do chi phí quản lý luồng (thread overhead) chiếm tỉ trọng nhỏ hơn khi khối lượng tính toán tăng lên. Ở cấu hình 2 luồng ($p=2$), Speedup đạt xấp xỉ $1.5$ và đạt khoảng $1.7$ ở cấu hình 8 luồng ($p=8$). Gia tốc thực tế thấp hơn lý tưởng do thuật toán tính tích vô hướng có cường độ tính toán thấp và bị giới hạn bởi băng thông bộ nhớ (memory-bandwidth bound) khi nhiều luồng đồng thời truy xuất bộ nhớ vật lý RAM.
+\subsection*{Đồ thị Thời gian thực hiện}
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}
+    \begin{axis}[
+        title={Thời gian thực hiện theo kích thước vector},
+        xlabel={Kích thước vector $n$},
+        ylabel={Thời gian (giây)},
+        xtick={1,2,3,4,5},
+        xticklabels={$10^6$,$5{\times}10^6$,$10^7$,$5{\times}10^7$,$10^8$},
+        ymode=log,
+        log basis y=10,
+        legend pos=north west,
+        ymajorgrids=true,
+        grid style=dashed,
+        width=0.85\textwidth,
+        height=6.5cm,
+      ]
+      \addplot+[mark=circle*,thick,black] coordinates {(1,0.0006) (2,0.0034) (3,0.0064) (4,0.0330) (5,0.0654)};
+      \addlegendentry{Tuần tự ($p=1$)}
+      \addplot+[mark=square*,thick,blue] coordinates {(1,0.0004) (2,0.0020) (3,0.0048) (4,0.0236) (5,0.0442)};
+      \addlegendentry{Song song $p=2$}
+      \addplot+[mark=triangle*,thick,red] coordinates {(1,0.0002) (2,0.0018) (3,0.0038) (4,0.0200) (5,0.0378)};
+      \addlegendentry{Song song $p=8$}
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Thời gian thực hiện (thang log) của 3 cấu hình: tuần tự, 2 luồng và 8 luồng}
+  \label{fig:timing}
+\end{figure}
+
+\subsection*{Đồ thị Speedup}
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}
+    \begin{axis}[
+        title={Speedup theo kích thước vector},
+        xlabel={Kích thước vector $n$},
+        ylabel={Speedup $S(p) = T_1 / T_p$},
+        xtick={1,2,3,4,5},
+        xticklabels={$10^6$,$5{\times}10^6$,$10^7$,$5{\times}10^7$,$10^8$},
+        legend pos=north west,
+        ymajorgrids=true,
+        grid style=dashed,
+        width=0.85\textwidth,
+        height=6.5cm,
+        ymin=0,
+      ]
+      \addplot+[mark=square*,thick,blue] coordinates {(1,1.5001) (2,1.7000) (3,1.3333) (4,1.3983) (5,1.4796)};
+      \addlegendentry{$p=2$ luồng}
+      \addplot+[mark=triangle*,thick,red] coordinates {(1,2.9995) (2,1.8889) (3,1.6842) (4,1.6500) (5,1.7302)};
+      \addlegendentry{$p=8$ luồng}
+      \addplot+[dashed,mark=none,blue!50] coordinates {(1,2) (2,2) (3,2) (4,2) (5,2)};
+      \addlegendentry{Lý tưởng $p=2$}
+      \addplot+[dashed,mark=none,red!50] coordinates {(1,8) (2,8) (3,8) (4,8) (5,8)};
+      \addlegendentry{Lý tưởng $p=8$}
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Speedup thực tế so với lý tưởng theo kích thước vector}
+  \label{fig:speedup}
+\end{figure}
+
+\subsection*{Đồ thị Hiệu suất song song}
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}
+    \begin{axis}[
+        title={Hiệu suất song song},
+        xlabel={Kích thước vector $n$},
+        ylabel={Hiệu suất $E(p) = S(p)/p$},
+        xtick={1,2,3,4,5},
+        xticklabels={$10^6$,$5{\times}10^6$,$10^7$,$5{\times}10^7$,$10^8$},
+        ymin=0, ymax=1.2,
+        legend pos=south east,
+        ymajorgrids=true,
+        grid style=dashed,
+        width=0.85\textwidth,
+        height=6.5cm,
+      ]
+      \addplot+[mark=square*,thick,blue] coordinates {(1,0.750) (2,0.850) (3,0.667) (4,0.699) (5,0.740)};
+      \addlegendentry{$p=2$ luồng}
+      \addplot+[mark=triangle*,thick,red] coordinates {(1,0.375) (2,0.236) (3,0.211) (4,0.206) (5,0.216)};
+      \addlegendentry{$p=8$ luồng}
+      \addplot+[dashed,mark=none,black,thick] coordinates {(1,1.0) (2,1.0) (3,1.0) (4,1.0) (5,1.0)};
+      \addlegendentry{Lý tưởng ($E=1$)}
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Hiệu suất khai thác luồng thực tế và lý tưởng}
+  \label{fig:efficiency}
+\end{figure}
+
+
+% =========================================================================
+% CHƯƠNG 2: BÀI TẬP 2 - SOLVING LINEAR SYSTEMS
