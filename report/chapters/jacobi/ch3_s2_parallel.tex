@@ -1,0 +1,54 @@
+\section{Thuật toán Jacobi song song hóa với OpenMP}
+
+Từ công thức lặp:
+\[ x_i^{(k+1)} = \frac{1}{a_{ii}} \left( b_i - \sum_{j \neq i} a_{ij} x_j^{(k)} \right) \]
+
+Ta thấy rằng, để tính được giá trị của biến $x_i^{(k+1)}$ tại vòng lặp mới, ta chỉ cần sử dụng các giá trị $x_j^{(k)}$ của vòng lặp trước đó. Các phép tính cho $x_1^{(k+1)}, x_2^{(k+1)}, \dots, x_n^{(k+1)}$ \textbf{hoàn toàn độc lập với nhau}. Đây là một đặc điểm cực kỳ lý tưởng cho lập trình song song dữ liệu (Data Parallelism).
+
+Sử dụng thư viện OpenMP, chúng tôi chia nhỏ không gian lặp $i$ (từ $1$ đến $n$) ra thành nhiều phần và giao cho các luồng (threads) khác nhau xử lý đồng thời thông qua chỉ thị \texttt{\#pragma omp parallel for}.
+
+Đồng thời, để kiểm tra điều kiện dừng của vòng lặp, ta cần tính độ lệch lớn nhất (max diff) giữa nghiệm mới và nghiệm cũ: 
+\[ \text{max\_diff} = \max_{i} |x_i^{(k+1)} - x_i^{(k)}| \]
+Việc tính giá trị lớn nhất này trong một vùng song song có thể gây ra hiện tượng tương tranh dữ liệu (data race). Do đó, mệnh đề \texttt{reduction(max:max\_diff)} được sử dụng để tổng hợp kết quả một cách an toàn.
+
+Mã nguồn C++ cài đặt phiên bản song song:
+\begin{lstlisting}[language=C++]
+vector<double> solveJacobiParallel(const vector<vector<double>>& A, const vector<double>& B, int numThreads, int maxIterations, double tolerance) {
+    int n = A.size();
+    vector<double> x(n, 0.0);
+    vector<double> x_new(n, 0.0);
+    omp_set_num_threads(numThreads);
+
+    for (int iter = 0; iter < maxIterations; ++iter) {
+        double max_diff = 0.0;
+
+        // Song song hóa vòng lặp tính toán x_new
+        #pragma omp parallel for reduction(max:max_diff)
+        for (int i = 0; i < n; ++i) {
+            double sum = 0.0;
+            for (int j = 0; j < n; ++j) {
+                if (i != j) {
+                    sum += A[i][j] * x[j];
+                }
+            }
+            x_new[i] = (B[i] - sum) / A[i][i];
+            
+            double diff = abs(x_new[i] - x[i]);
+            if (diff > max_diff) {
+                max_diff = diff;
+            }
+        }
+
+        // Cập nhật giá trị x cho vòng lặp tiếp theo
+        #pragma omp parallel for
+        for (int i = 0; i < n; ++i) {
+            x[i] = x_new[i];
+        }
+
+        if (max_diff < tolerance) {
+            return x; // Đạt độ hội tụ
+        }
+    }
+    return x;
+}
+\end{lstlisting}

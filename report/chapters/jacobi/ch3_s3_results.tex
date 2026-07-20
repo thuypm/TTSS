@@ -1,0 +1,122 @@
+\section{Kết quả thực nghiệm và đánh giá hiệu năng Jacobi}
+
+Tương tự phương pháp Gauss, thuật toán lặp Jacobi được đánh giá qua hai giai đoạn: kiểm chứng tính đúng đắn và đo đạc hiệu năng với ma trận lớn.
+
+\subsection{Kiểm chứng tính đúng đắn}
+Chương trình được thử nghiệm với một hệ phương trình $3 \times 3$ có tính chất trội chéo nghiêm ngặt:
+\begin{itemize}
+  \item \textbf{Đầu vào}:
+        \[
+          A = \begin{bmatrix}
+            10 & -1 & 2 \\
+            -1 & 11 & -1 \\
+            2 & -1 & 10
+          \end{bmatrix}, \quad
+          B = \begin{bmatrix}
+            6 \\ 25 \\ -11
+          \end{bmatrix}
+        \]
+  \item \textbf{Kết quả thực thi}:
+        \begin{itemize}
+          \item Kết quả nghiệm của bản Tuần tự: $x = [1.04327, 2.26923, -1.08173]$.
+          \item Kết quả nghiệm của bản Song song: $x = [1.04327, 2.26923, -1.08173]$.
+          \item Cả hai kết quả đều khớp với nghiệm kỳ vọng, sai số so với nghiệm chuẩn chỉ là $3.29 \times 10^{-7}$ (đạt ngưỡng \texttt{tolerance}).
+        \end{itemize}
+\end{itemize}
+
+\subsection{Thực nghiệm hiệu năng với dữ liệu lớn}
+Chương trình đã được benchmark với các kích thước ma trận từ $N=100$ đến $N=3000$, giới hạn tối đa 1000 vòng lặp. Số lượng luồng được sử dụng là $p \in \{1, 2, 4, 8\}$. 
+
+\begin{table}[H]
+  \centering
+  \caption{Thời gian (giây) và Speedup thực nghiệm lặp Jacobi}
+  \label{tab:jacobi_benchmark}
+  \vspace{0.2cm}
+  \small
+  \begin{tabular}{r|rrrr|rrr}
+    \toprule
+    \textbf{N} & \multicolumn{4}{c|}{\textbf{Thời gian (s)}} & \multicolumn{3}{c}{\textbf{Speedup $S(p)$}} \\
+               & $p$=1 (Tuần tự) & $p$=2 & $p$=4 & $p$=8  & $S(2)$ & $S(4)$ & $S(8)$ \\
+    \midrule
+    100        & $<0.001$ & $<0.001$ & $<0.001$ & 0.0010  & -      & -      & -      \\
+    200        & $<0.001$ & $<0.001$ & $<0.001$ & $<0.001$ & -      & -      & -      \\
+    400        & 0.0007   & 0.0010   & 0.0007   & 0.0007  & 0.70   & 1.00   & 1.00   \\
+    800        & 0.0030   & 0.0020   & 0.0020   & 0.0013  & 1.50   & 1.50   & 2.31   \\
+    1000       & 0.0047   & 0.0027   & 0.0020   & 0.0020  & 1.74   & 2.35   & 2.35   \\
+    1600       & 0.0103   & 0.0070   & 0.0047   & 0.0030  & 1.47   & 2.19   & 3.43   \\
+    3000       & 0.0350   & 0.0193   & 0.0113   & 0.0090  & 1.81   & 3.10   & 3.89   \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+\textit{Ghi chú: Đối với các ma trận quá nhỏ ($N \le 200$), thời gian chạy quá nhanh (dưới độ chia của hàm đo thời gian) nên không xét độ tăng tốc.}
+
+\subsection{Biểu đồ kết quả đo lường hiệu năng}
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}
+    \begin{axis}[
+        title={Thời gian thực hiện lặp Jacobi theo kích thước ma trận},
+        xlabel={Kích thước ma trận $N$},
+        ylabel={Thời gian (giây)},
+        xtick={1,2,3,4},
+        xticklabels={800, 1000, 1600, 3000},
+        ymode=log,
+        log basis y=10,
+        legend pos=north west,
+        ymajorgrids=true,
+        grid style=dashed,
+        width=0.85\textwidth,
+        height=6.5cm,
+      ]
+      \addplot+[mark=circle*,thick,black] coordinates {(1,0.0030) (2,0.0047) (3,0.0103) (4,0.0350)};
+      \addlegendentry{Tuần tự ($p=1$)}
+      \addplot+[mark=square*,thick,blue] coordinates {(1,0.0020) (2,0.0027) (3,0.0070) (4,0.0193)};
+      \addlegendentry{Song song $p=2$}
+      \addplot+[mark=triangle*,thick,red] coordinates {(1,0.0020) (2,0.0020) (3,0.0047) (4,0.0113)};
+      \addlegendentry{Song song $p=4$}
+      \addplot+[mark=diamond*,thick,green!70!black] coordinates {(1,0.0013) (2,0.0020) (3,0.0030) (4,0.0090)};
+      \addlegendentry{Song song $p=8$}
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Thời gian thực hiện (thang log) của thuật toán Jacobi}
+  \label{fig:jacobi_timing}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}
+    \begin{axis}[
+        title={Speedup theo kích thước ma trận},
+        xlabel={Kích thước ma trận $N$},
+        ylabel={Speedup $S(p) = T_1 / T_p$},
+        xtick={1,2,3,4},
+        xticklabels={800, 1000, 1600, 3000},
+        legend pos=north west,
+        ymajorgrids=true,
+        grid style=dashed,
+        width=0.85\textwidth,
+        height=6.5cm,
+        ymin=0, ymax=6,
+      ]
+      \addplot+[mark=square*,thick,blue] coordinates {(1,1.50) (2,1.74) (3,1.47) (4,1.81)};
+      \addlegendentry{$p=2$ luồng}
+      \addplot+[mark=triangle*,thick,red] coordinates {(1,1.50) (2,2.35) (3,2.19) (4,3.10)};
+      \addlegendentry{$p=4$ luồng}
+      \addplot+[mark=diamond*,thick,green!70!black] coordinates {(1,2.31) (2,2.35) (3,3.43) (4,3.89)};
+      \addlegendentry{$p=8$ luồng}
+      \addplot+[dashed,mark=none,blue!50] coordinates {(1,2) (4,2)};
+      \addlegendentry{Lý tưởng $p=2$}
+      \addplot+[dashed,mark=none,red!50] coordinates {(1,4) (4,4)};
+      \addlegendentry{Lý tưởng $p=4$}
+      \addplot+[dashed,mark=none,green!50] coordinates {(1,8) (4,8)};
+      \addlegendentry{Lý tưởng $p=8$}
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Speedup thực tế so với lý tưởng của thuật toán lặp Jacobi}
+  \label{fig:jacobi_speedup}
+\end{figure}
+
+\subsection{Phân tích kết quả}
+Dữ liệu trên cho thấy phương pháp Jacobi đạt được độ tăng tốc (Speedup) vô cùng tích cực khi kích thước ma trận $N$ lớn. 
+Tại kích thước $N=3000$, chương trình chạy $8$ luồng chỉ tốn khoảng $0.009$ giây, giảm gần 4 lần so với $0.035$ giây của chạy tuần tự.
+Điều này khẳng định rõ tính phù hợp hoàn hảo của thuật toán Jacobi đối với các nền tảng kiến trúc song song đa nhân. Khác với phương pháp khử Gauss yêu cầu các bước khử có tính liên kết chặt chẽ và không thể tách rời, các vòng lặp của Jacobi hoàn toàn không có phụ thuộc dữ liệu ngang (loop-carried dependencies). Điều này cho phép compiler và thư viện OpenMP chia đều các phần tử của vector cho các luồng một cách hiệu quả nhất mà không sinh ra chi phí đồng bộ lớn.

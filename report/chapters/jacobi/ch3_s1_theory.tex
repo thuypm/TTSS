@@ -1,0 +1,19 @@
+\section{Lý thuyết phương pháp lặp Jacobi}
+Phương pháp lặp Jacobi là một thuật toán lặp dùng để giải hệ phương trình tuyến tính $A x = B$. Thuật toán này có ưu điểm là rất dễ cài đặt và đặc biệt phù hợp để thực thi song song vì việc cập nhật nghiệm ở mỗi vòng lặp không phụ thuộc lẫn nhau.
+
+Trong đó $A$ là ma trận hệ số có kích thước $n \times n$, $B$ là vector vế phải, và $x$ là vector ẩn. Ta có thể phân tách ma trận $A$ thành ba phần: ma trận đường chéo $D$, ma trận tam giác dưới ngặt $L$ và ma trận tam giác trên ngặt $U$:
+\[ A = D + L + U \]
+
+Hệ phương trình $Ax = B$ có thể được viết lại dưới dạng:
+\[ (D + L + U)x = B \implies Dx = B - (L + U)x \]
+
+Từ đó, ta xây dựng được công thức lặp Jacobi ở bước $k+1$:
+\[ x^{(k+1)} = D^{-1} (B - (L + U)x^{(k)}) \]
+
+Hay viết dưới dạng hệ số từng phần tử:
+\[ x_i^{(k+1)} = \frac{1}{a_{ii}} \left( b_i - \sum_{j \neq i} a_{ij} x_j^{(k)} \right), \quad \forall i = 1, 2, \dots, n \]
+
+\textbf{Điều kiện hội tụ:}
+Phương pháp lặp Jacobi đảm bảo hội tụ (nghĩa là nghiệm lặp tiến dần tới nghiệm đúng của hệ) bất kể giá trị dự đoán ban đầu $x^{(0)}$ nếu ma trận $A$ là ma trận \textbf{trội chéo nghiêm ngặt} (strictly diagonally dominant) theo hàng:
+\[ |a_{ii}| > \sum_{j \neq i} |a_{ij}|, \quad \forall i = 1, 2, \dots, n \]
+Trong các bài đánh giá hiệu năng (benchmark) thực nghiệm, bộ dữ liệu ma trận được chúng tôi sinh ngẫu nhiên nhưng luôn đảm bảo tính chất trội chéo này để đảm bảo thuật toán hoạt động chính xác.

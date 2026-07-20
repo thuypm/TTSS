@@ -1,0 +1,39 @@
+{
+  "tests": [
+    {
+      "name": "He 2 an - co the giai bang dinh thuc Cramer",
+      "method": "determinant",
+      "dimension": 2,
+      "matrixA": [
+        [2, 1],
+        [5, 7]
+      ],
+      "vectorB": [11, 13],
+      "expectedSolution": [7.111111, -3.222222]
+    },
+    {
+      "name": "He 3 an - phu hop khu Gauss",
+      "method": "gauss",
+      "dimension": 3,
+      "matrixA": [
+        [3, 2, -4],
+        [2, 3, 3],
+        [5, -3, 1]
+      ],
+      "vectorB": [3, 15, 14],
+      "expectedSolution": [3, 1, 2]
+    },
+    {
+      "name": "He 3 an - cheo troi cho Jacobi",
+      "method": "jacobi",
+      "dimension": 3,
+      "matrixA": [
+        [10, -1, 2],
+        [-1, 11, -1],
+        [2, -1, 10]
+      ],
+      "vectorB": [6, 25, -11],
+      "expectedSolution": [1.043269, 2.269231, -1.081731]
+    }
+  ]
+}

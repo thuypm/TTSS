@@ -1,4 +1,15 @@
 {
     "cmake.sourceDirectory": "D:/Flutter/TTSS/OpenCVPararell",
-    "latex-workshop.formatting.latex": "latexindent"
+    "latex-workshop.formatting.latex": "latexindent",
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/.DS_Store": true,
+        "**/Thumbs.db": true,
+        "**/c:\\Users\\kendr\\TTSS\\report\\report.aux": true,
+        "**/c:\\Users\\kendr\\TTSS\\report\\report.log": true,
+        "**/c:\\Users\\kendr\\TTSS\\report\\report.gz": true,
+        "**/c:\\Users\\kendr\\TTSS\\report\\report.out": true
+    }
 }
